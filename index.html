@@ -9,108 +9,65 @@
 <title>骰命紀元</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body {
-  background:#0a0a0f; color:#e8d5a3;
-  font-family:Georgia,'Times New Roman',serif;
-  min-height:100vh; overflow-x:hidden;
-}
-/* ── 通用 ── */
+body { background:#0a0a0f; color:#e8d5a3; font-family:Georgia,'Times New Roman',serif; min-height:100vh; overflow-x:hidden; }
+
 .screen { display:none; min-height:100vh; flex-direction:column; align-items:center; padding:20px; }
 .screen.active { display:flex; }
-.gold { color:#f0d080; }
-.dim  { color:#8a7a5a; }
-.red  { color:#e05050; }
-.green{ color:#60d080; }
+.gold { color:#f0d080; } .dim { color:#8a7a5a; } .red { color:#e05050; } .green { color:#60d080; }
 
-/* 裝飾線 */
-.deco { width:280px; height:1px;
-background:linear-gradient(90deg,transparent,#c8a96e,#f0d080,#c8a96e,transparent);
-margin:10px 0; }
-
-/* 標題 */
-.main-title {
-font-size:42px; font-weight:bold; color:#f0d080;
-text-shadow:0 0 20px rgba(200,160,80,.6),2px 2px 0 rgba(0,0,0,.8);
-letter-spacing:8px; text-align:center;
-animation:glow 3s ease-in-out infinite alternate;
-}
-@keyframes glow {
-from { text-shadow:0 0 20px rgba(200,160,80,.6),2px 2px 0 rgba(0,0,0,.8); }
-to   { text-shadow:0 0 35px rgba(220,180,100,.9),0 0 60px rgba(220,140,40,.5),2px 2px 0 rgba(0,0,0,.8); }
-}
+.deco { width:280px; height:1px; background:linear-gradient(90deg,transparent,#c8a96e,#f0d080,#c8a96e,transparent); margin:10px 0; }
+.main-title { font-size:42px; font-weight:bold; color:#f0d080; text-shadow:0 0 20px rgba(200,160,80,.6),2px 2px 0 rgba(0,0,0,.8); letter-spacing:8px; text-align:center; animation:glow 3s ease-in-out infinite alternate; }
+@keyframes glow { from{text-shadow:0 0 20px rgba(200,160,80,.6),2px 2px 0 rgba(0,0,0,.8);}to{text-shadow:0 0 35px rgba(220,180,100,.9),0 0 60px rgba(220,140,40,.5),2px 2px 0 rgba(0,0,0,.8);} }
 .sub-title { font-size:12px; letter-spacing:6px; color:#c8a96e; margin:4px 0 20px; }
 
-/* 按鈕 */
-.btn {
-position:relative; background:transparent; border:none;
-cursor:pointer; font-family:Georgia,serif; width:100%; margin:6px 0;
-}
-.btn-inner {
-display:flex; align-items:center; justify-content:center;
-padding:12px 32px;
-background:linear-gradient(135deg,rgba(30,20,10,.9),rgba(50,35,15,.7),rgba(30,20,10,.9));
-border:1px solid rgba(200,160,80,.35);
-color:#e8d5a3; font-size:14px; letter-spacing:4px;
-transition:all .3s;
-clip-path:polygon(14px 0%,calc(100% - 14px) 0%,100% 50%,calc(100% - 14px) 100%,14px 100%,0% 50%);
-}
-.btn:active .btn-inner, .btn:hover .btn-inner {
-background:linear-gradient(135deg,rgba(80,55,15,.95),rgba(120,85,20,.8),rgba(80,55,15,.95));
-border-color:rgba(240,200,80,.7); color:#f8e8b0;
-text-shadow:0 0 10px rgba(240,200,80,.5);
-}
-.btn:disabled .btn-inner, .btn[disabled] .btn-inner {
-opacity:.35; cursor:not-allowed;
-background:linear-gradient(135deg,rgba(20,15,10,.9),rgba(30,25,15,.7),rgba(20,15,10,.9));
-}
+.btn { position:relative; background:transparent; border:none; cursor:pointer; font-family:Georgia,serif; width:100%; margin:6px 0; }
+.btn-inner { display:flex; align-items:center; justify-content:center; padding:12px 32px; background:linear-gradient(135deg,rgba(30,20,10,.9),rgba(50,35,15,.7),rgba(30,20,10,.9)); border:1px solid rgba(200,160,80,.35); color:#e8d5a3; font-size:14px; letter-spacing:4px; transition:all .3s; clip-path:polygon(14px 0%,calc(100% - 14px) 0%,100% 50%,calc(100% - 14px) 100%,14px 100%,0% 50%); }
+.btn:active .btn-inner,.btn:hover .btn-inner { background:linear-gradient(135deg,rgba(80,55,15,.95),rgba(120,85,20,.8),rgba(80,55,15,.95)); border-color:rgba(240,200,80,.7); color:#f8e8b0; text-shadow:0 0 10px rgba(240,200,80,.5); }
+.btn[disabled] .btn-inner { opacity:.35; cursor:not-allowed; background:linear-gradient(135deg,rgba(20,15,10,.9),rgba(30,25,15,.7),rgba(20,15,10,.9)); }
 .btn-sm .btn-inner { padding:8px 20px; font-size:12px; letter-spacing:3px; }
 .btn-wide { width:220px; }
 
-/* 面板 */
-.panel {
-width:100%; max-width:400px;
-background:rgba(20,15,10,.85);
-border:1px solid rgba(200,160,80,.25);
-border-radius:4px; padding:16px; margin:8px 0;
-}
-.panel-title {
-font-size:13px; letter-spacing:4px; color:#c8a96e;
-border-bottom:1px solid rgba(200,160,80,.2); padding-bottom:8px; margin-bottom:12px;
-}
-
-/* 屬性格 */
+.panel { width:100%; max-width:400px; background:rgba(20,15,10,.85); border:1px solid rgba(200,160,80,.25); border-radius:4px; padding:16px; margin:8px 0; }
+.panel-title { font-size:13px; letter-spacing:4px; color:#c8a96e; border-bottom:1px solid rgba(200,160,80,.2); padding-bottom:8px; margin-bottom:12px; }
 .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .stat-item { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
-.stat-label { color:#8a7a5a; }
-.stat-val   { color:#f0d080; font-weight:bold; }
+.stat-label { color:#8a7a5a; } .stat-val { color:#f0d080; font-weight:bold; }
 
-/* 骰子 */
+/* ── 像素骰子 ── */
 .dice-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:10px 0; }
 .die {
-width:56px; height:56px; border-radius:8px;
+width:56px; height:56px; border-radius:6px;
 display:flex; align-items:center; justify-content:center;
-font-size:11px; letter-spacing:1px; font-weight:bold;
 border:2px solid rgba(200,160,80,.4);
-background:rgba(40,30,15,.9); color:#f0d080;
-text-align:center; flex-direction:column; gap:2px;
+background:rgba(18,14,8,.95);
 cursor:pointer; transition:all .2s; user-select:none;
+position:relative; image-rendering:pixelated;
 }
-.die.atk  { border-color:rgba(220,80,80,.6);  color:#e08080; }
-.die.def  { border-color:rgba(80,140,220,.6); color:#80a8e0; }
-.die.sp   { border-color:rgba(160,80,220,.6); color:#c080e0; }
-.die.none { border-color:rgba(100,100,100,.4);color:#666; }
-.die.selected { transform:scale(1.1); box-shadow:0 0 12px rgba(240,200,80,.5); }
-.die.rolling { animation:roll .4s ease; }
-@keyframes roll {
-0%  { transform:rotate(0deg) scale(1); }
-25% { transform:rotate(90deg) scale(.8); }
-75% { transform:rotate(270deg) scale(.8); }
-100%{ transform:rotate(360deg) scale(1); }
-}
-.die-icon { font-size:18px; }
-.die-label { font-size:9px; opacity:.8; }
+.die.atk  { border-color:rgba(220,80,80,.7);  background:rgba(40,10,10,.95); }
+.die.def  { border-color:rgba(80,140,220,.7); background:rgba(10,20,40,.95); }
+.die.sp   { border-color:rgba(160,80,220,.7); background:rgba(25,10,40,.95); }
+.die.matk { border-color:rgba(80,200,160,.7); background:rgba(10,35,30,.95); }
+.die.none { border-color:rgba(80,80,80,.4);   background:rgba(15,15,15,.95); }
+.die.selected { transform:scale(1.12); box-shadow:0 0 14px rgba(240,200,80,.6); border-color:#f0d080; }
+.die.rolling { animation:rollAnim .4s ease; }
+@keyframes rollAnim { 0%{transform:rotate(0)scale(1)}25%{transform:rotate(90deg)scale(.8)}75%{transform:rotate(270deg)scale(.8)}100%{transform:rotate(360deg)scale(1)} }
 
-/* HP/MP 條 */
+/* 像素點陣 */
+.pip-grid { display:grid; width:36px; height:36px; gap:3px; }
+.pip { border-radius:50%; }
+.pip.on.atk  { background:#e05050; box-shadow:0 0 4px #e05050; }
+.pip.on.def  { background:#5090e0; box-shadow:0 0 4px #5090e0; }
+.pip.on.sp   { background:#c060e0; box-shadow:0 0 4px #c060e0; }
+.pip.on.matk { background:#40c8a0; box-shadow:0 0 4px #40c8a0; }
+.pip.on.none { background:#555; }
+.pip.off { background:rgba(255,255,255,.06); }
+.die-label-text { position:absolute; bottom:2px; left:0; right:0; text-align:center; font-size:8px; letter-spacing:1px; opacity:.7; font-family:monospace; }
+.die.atk  .die-label-text { color:#e08080; }
+.die.def  .die-label-text { color:#80a8e0; }
+.die.sp   .die-label-text { color:#c080e0; }
+.die.matk .die-label-text { color:#40c8a0; }
+.die.none .die-label-text { color:#666; }
+
 .bar-row { margin:6px 0; }
 .bar-label { font-size:11px; color:#8a7a5a; margin-bottom:3px; }
 .bar-bg { background:rgba(255,255,255,.1); border-radius:4px; height:10px; overflow:hidden; }
@@ -118,69 +75,56 @@ cursor:pointer; transition:all .2s; user-select:none;
 .bar-hp { background:linear-gradient(90deg,#a02020,#e05050); }
 .bar-mp { background:linear-gradient(90deg,#1a40a0,#4080e0); }
 
-/* 戰鬥 */
-.combat-area { width:100%; max-width:400px; }
-.enemy-panel { text-align:center; padding:16px; margin-bottom:12px;
-background:rgba(40,10,10,.8); border:1px solid rgba(200,80,80,.3); border-radius:4px; }
-.enemy-name { font-size:18px; color:#e08080; letter-spacing:3px; margin-bottom:8px; }
-.combat-log {
-background:rgba(10,10,15,.9); border:1px solid rgba(200,160,80,.2);
-border-radius:4px; padding:10px; height:120px; overflow-y:auto;
-font-size:12px; line-height:1.8; margin:10px 0;
-}
-.log-line { padding:1px 0; }
-.log-dmg  { color:#e08080; }
-.log-heal { color:#60d080; }
-.log-info { color:#c8a96e; }
-.log-skill{ color:#c080e0; }
-
-/* 任務 */
-.quest-item {
-padding:10px; margin:6px 0;
-background:rgba(30,25,10,.8); border:1px solid rgba(200,160,80,.2);
-border-radius:4px; font-size:13px;
-}
-.quest-name { color:#f0d080; margin-bottom:4px; }
-.quest-prog { color:#8a7a5a; font-size:12px; }
-
-/* 強化 */
-.upgrade-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0;
-border-bottom:1px solid rgba(200,160,80,.1); }
-.upgrade-cost { font-size:11px; color:#c8a96e; }
-
-/* 頁首 */
-.topbar {
-width:100%; max-width:400px;
-display:flex; justify-content:space-between; align-items:center;
-padding:8px 0; margin-bottom:8px;
-border-bottom:1px solid rgba(200,160,80,.2);
-}
+.topbar { width:100%; max-width:400px; display:flex; justify-content:space-between; align-items:center; padding:8px 0; margin-bottom:8px; border-bottom:1px solid rgba(200,160,80,.2); }
 .topbar-title { font-size:16px; color:#f0d080; letter-spacing:3px; }
 .gold-display { font-size:13px; color:#f0d080; }
 
-/* 關卡進度 */
-.floor-indicator { font-size:12px; color:#8a7a5a; letter-spacing:2px; margin:4px 0; }
+.combat-area { width:100%; max-width:400px; }
+.enemy-panel { text-align:center; padding:16px; margin-bottom:10px; background:rgba(40,10,10,.8); border:1px solid rgba(200,80,80,.3); border-radius:4px; }
+.enemy-name { font-size:18px; color:#e08080; letter-spacing:3px; margin-bottom:8px; }
+.combat-log { background:rgba(10,10,15,.9); border:1px solid rgba(200,160,80,.2); border-radius:4px; padding:10px; height:100px; overflow-y:auto; font-size:12px; line-height:1.8; margin:8px 0; }
+.log-line { padding:1px 0; }
+.log-dmg{color:#e08080;} .log-heal{color:#60d080;} .log-info{color:#c8a96e;} .log-skill{color:#c080e0;}
 
-/* toast */
-#toast {
-position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
-background:rgba(30,20,10,.95); border:1px solid rgba(200,160,80,.5);
-color:#f0d080; padding:10px 24px; border-radius:4px; font-size:13px;
-letter-spacing:2px; z-index:999; opacity:0; transition:opacity .3s;
-pointer-events:none; white-space:nowrap;
-}
+.quest-item { padding:10px; margin:6px 0; background:rgba(30,25,10,.8); border:1px solid rgba(200,160,80,.2); border-radius:4px; font-size:13px; }
+.quest-name { color:#f0d080; margin-bottom:4px; }
+.quest-prog { color:#8a7a5a; font-size:12px; }
+
+.upgrade-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(200,160,80,.1); gap:8px; }
+
+.floor-indicator { font-size:12px; color:#8a7a5a; letter-spacing:2px; }
+
+/* 物品 */
+.item-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px; }
+.item-card { padding:10px 8px; background:rgba(30,25,10,.9); border:1px solid rgba(200,160,80,.2); border-radius:4px; text-align:center; cursor:pointer; transition:all .2s; font-size:12px; }
+.item-card:hover,.item-card.selected { border-color:#f0d080; background:rgba(60,50,15,.9); }
+.item-card .item-icon { font-size:22px; display:block; margin-bottom:4px; }
+.item-card .item-name { color:#f0d080; font-size:12px; letter-spacing:1px; }
+.item-card .item-desc { color:#8a7a5a; font-size:10px; margin-top:2px; }
+.item-empty { color:#555; font-size:11px; text-align:center; padding:8px; }
+
+/* 技能選擇 overlay */
+#skill-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:100; align-items:center; justify-content:center; }
+#skill-overlay.show { display:flex; }
+.skill-box { background:#12100a; border:1px solid rgba(200,160,80,.5); border-radius:6px; padding:20px; width:300px; max-width:90vw; }
+.skill-box-title { color:#f0d080; letter-spacing:3px; font-size:14px; margin-bottom:12px; text-align:center; }
+.skill-option { padding:10px; margin:6px 0; background:rgba(40,30,10,.9); border:1px solid rgba(200,160,80,.2); border-radius:4px; cursor:pointer; transition:all .2s; }
+.skill-option:hover { border-color:#f0d080; background:rgba(80,60,15,.9); }
+.skill-option-name { color:#c080e0; font-size:13px; letter-spacing:2px; }
+.skill-option-desc { color:#8a7a5a; font-size:11px; margin-top:3px; }
+.skill-option-mp   { color:#4080e0; font-size:11px; margin-top:2px; }
+
+#toast { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(30,20,10,.95); border:1px solid rgba(200,160,80,.5); color:#f0d080; padding:10px 24px; border-radius:4px; font-size:13px; letter-spacing:2px; z-index:999; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
 #toast.show { opacity:1; }
 
-.mt8  { margin-top:8px; }
-.mt16 { margin-top:16px; }
-.text-center { text-align:center; }
-.scroll-area { width:100%; max-width:400px; overflow-y:auto; }
+.mt8{margin-top:8px;} .mt16{margin-top:16px;} .text-center{text-align:center;} .scroll-area{width:100%;max-width:400px;overflow-y:auto;}
+.combat-actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px; }
 </style>
 
 </head>
 <body>
 
-<!-- ════════════════ 主選單 ════════════════ -->
+<!-- 主選單 -->
 
 <div id="screen-main" class="screen active">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
@@ -196,10 +140,10 @@ pointer-events:none; white-space:nowrap;
       <button class="btn btn-wide" onclick="showScreen('screen-settings')"><div class="btn-inner">設　　定</div></button>
     </div>
   </div>
-  <div class="dim" style="font-size:10px;letter-spacing:2px;padding-bottom:16px;">Ver. 0.1.0</div>
+  <div class="dim" style="font-size:10px;letter-spacing:2px;padding-bottom:16px;">Ver. 0.2.0</div>
 </div>
 
-<!-- ════════════════ 城鎮 ════════════════ -->
+<!-- 城鎮 -->
 
 <div id="screen-town" class="screen">
   <div class="topbar">
@@ -210,34 +154,20 @@ pointer-events:none; white-space:nowrap;
     <button class="btn btn-wide" onclick="showScreen('screen-tavern')"><div class="btn-inner">酒　館</div></button>
     <button class="btn btn-wide" onclick="showScreen('screen-barracks')"><div class="btn-inner">兵　營</div></button>
     <button class="btn btn-wide" onclick="showScreen('screen-alchemy')"><div class="btn-inner">煉金工坊</div></button>
+    <button class="btn btn-wide" onclick="showScreen('screen-shop')"><div class="btn-inner">商　店</div></button>
     <button class="btn btn-wide" onclick="enterAdventure()"><div class="btn-inner">冒　險</div></button>
   </div>
 </div>
 
-<!-- ════════════════ 酒館 ════════════════ -->
+<!-- 酒館 -->
 
 <div id="screen-tavern" class="screen">
-  <div class="topbar">
-    <div class="topbar-title">酒　館</div>
-    <div class="gold-display">💰 <span id="tavern-gold">0</span></div>
-  </div>
+  <div class="topbar"><div class="topbar-title">酒　館</div><div class="gold-display">💰 <span id="tavern-gold">0</span></div></div>
   <div class="scroll-area">
-    <!-- 角色狀態 -->
-    <div class="panel">
-      <div class="panel-title">◆ 角色狀態</div>
-      <div id="tavern-char-info"></div>
-    </div>
-    <!-- 骰子 -->
-    <div class="panel">
-      <div class="panel-title">◆ 骰子配置</div>
-      <div id="tavern-dice-info" class="dice-row"></div>
-    </div>
-    <!-- 任務 -->
-    <div class="panel">
-      <div class="panel-title">◆ 任　務</div>
-      <div id="tavern-quests"></div>
-    </div>
-    <!-- 存檔 -->
+    <div class="panel"><div class="panel-title">◆ 角色狀態</div><div id="tavern-char-info"></div></div>
+    <div class="panel"><div class="panel-title">◆ 骰子配置</div><div id="tavern-dice-info" class="dice-row"></div></div>
+    <div class="panel"><div class="panel-title">◆ 背包 <span class="dim" style="font-size:10px;" id="bag-cap-label"></span></div><div id="tavern-bag"></div></div>
+    <div class="panel"><div class="panel-title">◆ 任　務</div><div id="tavern-quests"></div></div>
     <div class="text-center mt16">
       <button class="btn btn-wide btn-sm" onclick="saveGame()"><div class="btn-inner">存　檔</div></button>
       <button class="btn btn-wide btn-sm mt8" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
@@ -245,47 +175,39 @@ pointer-events:none; white-space:nowrap;
   </div>
 </div>
 
-<!-- ════════════════ 兵營 ════════════════ -->
+<!-- 兵營 -->
 
 <div id="screen-barracks" class="screen">
-  <div class="topbar">
-    <div class="topbar-title">兵　營</div>
-    <div class="gold-display">💰 <span id="barracks-gold">0</span></div>
-  </div>
+  <div class="topbar"><div class="topbar-title">兵　營</div><div class="gold-display">💰 <span id="barracks-gold">0</span></div></div>
   <div class="scroll-area">
-    <div class="panel">
-      <div class="panel-title">◆ 強化能力值（各需 50 金幣）</div>
-      <div id="barracks-stats"></div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">◆ 技　能</div>
-      <div id="barracks-skills"></div>
-    </div>
-    <div class="text-center mt16">
-      <button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
-    </div>
+    <div class="panel"><div class="panel-title">◆ 強化能力值（各 50 金）</div><div id="barracks-stats"></div></div>
+    <div class="panel"><div class="panel-title">◆ 技　能</div><div id="barracks-skills"></div></div>
+    <div class="text-center mt16"><button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button></div>
   </div>
 </div>
 
-<!-- ════════════════ 煉金工坊 ════════════════ -->
+<!-- 煉金工坊 -->
 
 <div id="screen-alchemy" class="screen">
-  <div class="topbar">
-    <div class="topbar-title">煉金工坊</div>
-    <div class="gold-display">💰 <span id="alchemy-gold">0</span></div>
-  </div>
+  <div class="topbar"><div class="topbar-title">煉金工坊</div><div class="gold-display">💰 <span id="alchemy-gold">0</span></div></div>
   <div class="scroll-area">
-    <div class="panel">
-      <div class="panel-title">◆ 骰子強化（各需 80 金幣）</div>
-      <div id="alchemy-dice"></div>
-    </div>
-    <div class="text-center mt16">
-      <button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
-    </div>
+    <div class="panel"><div class="panel-title">◆ 骰子強化（各 80 金）</div><div id="alchemy-dice"></div></div>
+    <div class="text-center mt16"><button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button></div>
   </div>
 </div>
 
-<!-- ════════════════ 冒險/戰鬥 ════════════════ -->
+<!-- 商店 -->
+
+<div id="screen-shop" class="screen">
+  <div class="topbar"><div class="topbar-title">商　店</div><div class="gold-display">💰 <span id="shop-gold">0</span></div></div>
+  <div class="scroll-area">
+    <div class="panel"><div class="panel-title">◆ 購買</div><div id="shop-buy"></div></div>
+    <div class="panel"><div class="panel-title">◆ 背包（點選販售）<span class="dim" style="font-size:10px;" id="shop-bag-cap"></span></div><div id="shop-bag"></div></div>
+    <div class="text-center mt16"><button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button></div>
+  </div>
+</div>
+
+<!-- 戰鬥 -->
 
 <div id="screen-combat" class="screen">
   <div class="topbar">
@@ -293,7 +215,6 @@ pointer-events:none; white-space:nowrap;
     <div id="combat-floor" class="floor-indicator">第 1 關</div>
   </div>
   <div class="combat-area">
-    <!-- 敵人 -->
     <div class="enemy-panel">
       <div class="enemy-name" id="enemy-name">???</div>
       <div class="bar-row">
@@ -302,7 +223,6 @@ pointer-events:none; white-space:nowrap;
       </div>
       <div style="font-size:11px;color:#8a7a5a;margin-top:6px;" id="enemy-intent"></div>
     </div>
-    <!-- 玩家 HP/MP -->
     <div class="panel" style="padding:10px 16px;">
       <div class="bar-row">
         <div class="bar-label">HP <span id="player-hp-text">0/0</span></div>
@@ -313,191 +233,185 @@ pointer-events:none; white-space:nowrap;
         <div class="bar-bg"><div class="bar-fill bar-mp" id="player-mp-bar" style="width:100%"></div></div>
       </div>
     </div>
-    <!-- 骰子區 -->
     <div class="panel">
-      <div class="panel-title">◆ 本回合骰子 <span class="dim" style="font-size:10px;">（點選可重擲，每回合限一次）</span></div>
+      <div class="panel-title">◆ 本回合骰子 <span class="dim" style="font-size:10px;">（點選重擲，限一次）</span></div>
       <div id="combat-dice" class="dice-row"></div>
-      <div id="skill-hint" style="font-size:11px;color:#c080e0;min-height:16px;text-align:center;margin-top:4px;"></div>
     </div>
-    <!-- 戰鬥紀錄 -->
     <div class="combat-log" id="combat-log"></div>
-    <!-- 行動按鈕 -->
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn btn-sm" style="width:120px;" id="btn-attack" onclick="playerAttack()">
-        <div class="btn-inner">行　動</div>
-      </button>
-      <button class="btn btn-sm" style="width:120px;" id="btn-skip" onclick="skipTurn()">
-        <div class="btn-inner">跳　過</div>
-      </button>
+    <div class="combat-actions">
+      <button class="btn btn-sm" style="width:110px;" id="btn-attack" onclick="openSkillOrAttack()"><div class="btn-inner">行　動</div></button>
+      <button class="btn btn-sm" style="width:110px;" id="btn-item" onclick="openItemMenu()"><div class="btn-inner">物　品</div></button>
+      <button class="btn btn-sm" style="width:110px;" onclick="skipTurn()"><div class="btn-inner">跳　過</div></button>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ 聯絡/設定（簡單） ════════════════ -->
+<!-- 聯絡/設定 -->
 
 <div id="screen-contact" class="screen">
   <div class="topbar"><div class="topbar-title">聯絡我們</div></div>
-  <div class="panel text-center" style="margin-top:20px;">
-    <div style="color:#8a7a5a;font-size:13px;line-height:2;">
-      骰命紀元 開發中<br>意見回饋請來信<br>
-      <span class="gold">dicechronicle@example.com</span>
-    </div>
-  </div>
+  <div class="panel text-center" style="margin-top:20px;"><div style="color:#8a7a5a;font-size:13px;line-height:2;">骰命紀元 開發中<br><span class="gold">dicechronicle@example.com</span></div></div>
   <button class="btn btn-wide btn-sm mt16" onclick="showScreen('screen-main')"><div class="btn-inner">返　回</div></button>
 </div>
 <div id="screen-settings" class="screen">
   <div class="topbar"><div class="topbar-title">設　定</div></div>
   <div class="panel mt16">
-    <div class="upgrade-row">
-      <span style="font-size:13px;">刪除存檔</span>
-      <button class="btn btn-sm" style="width:100px;" onclick="deleteSave()"><div class="btn-inner">刪　除</div></button>
-    </div>
+    <div class="upgrade-row"><span style="font-size:13px;">刪除存檔</span><button class="btn btn-sm" style="width:100px;" onclick="deleteSave()"><div class="btn-inner">刪　除</div></button></div>
   </div>
   <button class="btn btn-wide btn-sm mt16" onclick="showScreen('screen-main')"><div class="btn-inner">返　回</div></button>
+</div>
+
+<!-- 技能選擇 overlay -->
+
+<div id="skill-overlay">
+  <div class="skill-box">
+    <div class="skill-box-title">◆ 選擇行動</div>
+    <div id="skill-options"></div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn btn-sm" style="width:140px;" onclick="closeSkillOverlay();doNormalAttack()"><div class="btn-inner">普通攻擊</div></button>
+      <button class="btn btn-sm" style="width:140px;margin-top:6px;" onclick="closeSkillOverlay()"><div class="btn-inner">取　消</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- 物品選擇 overlay -->
+
+<div id="item-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;">
+  <div class="skill-box">
+    <div class="skill-box-title">◆ 使用物品</div>
+    <div id="item-options"></div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn btn-sm" style="width:140px;" onclick="closeItemOverlay()"><div class="btn-inner">取　消</div></button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-//  資料定義
-// ══════════════════════════════════════════
+// ══════════ 資料定義 ══════════
 const FACE_TYPES = {
-  atk:  { label:'物攻', icon:'⚔️', cls:'atk' },
-  def:  { label:'防禦', icon:'🛡️', cls:'def' },
-  sp:   { label:'特殊', icon:'✨', cls:'sp'  },
-  none: { label:'空白', icon:'⬜', cls:'none'},
-  matk: { label:'魔攻', icon:'🔮', cls:'sp'  },
+  atk:  { label:'ATK', cls:'atk',  pips:6 },
+  def:  { label:'DEF', cls:'def',  pips:4 },
+  sp:   { label:'SP',  cls:'sp',   pips:5 },
+  matk: { label:'MAG', cls:'matk', pips:3 },
+  none: { label:'---', cls:'none', pips:1 },
 };
 
+// 像素點陣佈局（3x3格，true=顯示）
+const PIP_LAYOUTS = {
+  1:[[0,0,0],[0,1,0],[0,0,0]],
+  2:[[1,0,0],[0,0,0],[0,0,1]],
+  3:[[1,0,0],[0,1,0],[0,0,1]],
+  4:[[1,0,1],[0,0,0],[1,0,1]],
+  5:[[1,0,1],[0,1,0],[1,0,1]],
+  6:[[1,0,1],[1,0,1],[1,0,1]],
+};
+
+function makeDieEl(faceType, small=false) {
+  const ft = FACE_TYPES[faceType];
+  const div = document.createElement('div');
+  div.className = `die ${ft.cls}`;
+  if (small) { div.style.width='44px'; div.style.height='44px'; }
+  const layout = PIP_LAYOUTS[ft.pips];
+  const grid = document.createElement('div');
+  grid.className = 'pip-grid';
+  grid.style.gridTemplateColumns = 'repeat(3,1fr)';
+  grid.style.width = small?'28px':'36px';
+  grid.style.height = small?'28px':'36px';
+  layout.forEach(row => row.forEach(cell => {
+    const p = document.createElement('div');
+    p.className = `pip ${cell?'on '+ft.cls:'off'}`;
+    grid.appendChild(p);
+  }));
+  div.appendChild(grid);
+  const lbl = document.createElement('div');
+  lbl.className = 'die-label-text';
+  lbl.textContent = ft.label;
+  div.appendChild(lbl);
+  return div;
+}
+
 const SKILLS_DEF = [
-  { id:'slash',  name:'斬擊',   req:{atk:2,sp:0,def:0}, mpCost:0,  dmgMult:1.8, desc:'物攻×2 → 強力一擊' },
-  { id:'guard',  name:'鐵壁',   req:{atk:0,sp:0,def:2}, mpCost:0,  dmgMult:0,   desc:'防禦×2 → 本回合傷害-60%', effect:'shield' },
-  { id:'arcane', name:'秘術爆發',req:{atk:1,sp:2,def:0}, mpCost:20, dmgMult:2.5, desc:'物攻×1+特殊×2 → 魔法大傷' },
-  { id:'regen',  name:'恢復術', req:{atk:0,sp:1,def:1}, mpCost:15, dmgMult:0,   desc:'特殊×1+防禦×1 → 回復HP', effect:'heal' },
+  { id:'slash',  name:'斬擊',    req:{atk:2}, mpCost:0,  dmgMult:1.8, desc:'物攻×2 → 強力一擊' },
+  { id:'guard',  name:'鐵壁',    req:{def:2}, mpCost:0,  dmgMult:0,   desc:'防禦×2 → 本回合傷害-60%', effect:'shield' },
+  { id:'arcane', name:'秘術爆發', req:{atk:1,sp:2}, mpCost:20, dmgMult:2.5, desc:'攻×1+特殊×2 → 魔法大傷' },
+  { id:'regen',  name:'恢復術',  req:{sp:1,def:1}, mpCost:15, dmgMult:0,   desc:'特殊×1+防禦×1 → 回復HP', effect:'heal' },
 ];
 
 const ENEMIES = [
-  { name:'哥布林',    hp:30,  atk:6,  def:2,  xp:10, gold:8,  type:'goblin',
-    actions:['attack','attack','defend'] },
-  { name:'骷髏兵',   hp:45,  atk:8,  def:4,  xp:15, gold:12, type:'skeleton',
-    actions:['attack','attack','heavy'] },
-  { name:'石像鬼',   hp:70,  atk:10, def:6,  xp:25, gold:18, type:'gargoyle',
-    actions:['attack','defend','heavy'] },
-  { name:'黑暗騎士', hp:100, atk:14, def:8,  xp:40, gold:30, type:'darknight',
-    actions:['attack','heavy','defend'] },
-  { name:'巨魔',     hp:60,  atk:12, def:3,  xp:20, gold:15, type:'troll',
-    actions:['heavy','attack','attack'] },
+  { name:'哥布林',    hp:30,  atk:6,  def:2, mdef:2, xp:10, gold:8,  type:'goblin',   actions:['attack','attack','defend'], boss:false },
+  { name:'骷髏兵',   hp:45,  atk:8,  def:4, mdef:3, xp:15, gold:12, type:'skeleton', actions:['attack','attack','heavy'],  boss:false },
+  { name:'石像鬼',   hp:70,  atk:10, def:6, mdef:5, xp:25, gold:18, type:'gargoyle', actions:['attack','defend','heavy'],  boss:false },
+  { name:'巨魔',     hp:60,  atk:12, def:3, mdef:2, xp:20, gold:15, type:'troll',    actions:['heavy','attack','attack'],  boss:false },
+  { name:'黑暗騎士', hp:120, atk:16, def:8, mdef:8, xp:60, gold:50, type:'darknight',actions:['attack','heavy','defend'],  boss:true  },
 ];
+
+const ITEMS_DEF = {
+  hp_pot:  { id:'hp_pot',  name:'HP小回復藥', icon:'🧪', desc:'恢復 20 HP',       buyPrice:30, sellPrice:12 },
+  mp_pot:  { id:'mp_pot',  name:'MP小回復藥', icon:'💧', desc:'恢復 10 MP',       buyPrice:25, sellPrice:10 },
+  atk_buf: { id:'atk_buf', name:'戰鬥強化',   icon:'⚔️', desc:'本關卡攻擊+5',     buyPrice:40, sellPrice:15 },
+  def_buf: { id:'def_buf', name:'防禦強化',   icon:'🛡️', desc:'本關卡防禦+5',     buyPrice:40, sellPrice:15 },
+  escape:  { id:'escape',  name:'逃脫繩索',   icon:'🪢', desc:'跳過一關非Boss關', buyPrice:60, sellPrice:20 },
+};
 
 const QUESTS_DEF = [
-  { id:'q1', name:'哥布林掃蕩', desc:'打倒哥布林', target:'goblin', need:10, reward:{ gold:80,  xp:50  }},
-  { id:'q2', name:'骸骨清除',   desc:'打倒骷髏兵', target:'skeleton',need:5, reward:{ gold:60,  xp:40  }},
-  { id:'q3', name:'石像鬼獵人', desc:'打倒石像鬼', target:'gargoyle',need:3, reward:{ gold:100, xp:80  }},
+  { id:'q1', name:'哥布林掃蕩', target:'goblin',   need:10, reward:{ gold:80,  xp:50, items:['hp_pot'] }},
+  { id:'q2', name:'骸骨清除',   target:'skeleton', need:5,  reward:{ gold:60,  xp:40, items:[] }},
+  { id:'q3', name:'石像鬼獵人', target:'gargoyle', need:3,  reward:{ gold:100, xp:80, items:['atk_buf'] }},
 ];
 
-// ══════════════════════════════════════════
-//  遊戲狀態
-// ══════════════════════════════════════════
-let G = null; // 全域遊戲狀態
-let combat = null; // 戰鬥狀態
+// ══════════ 遊戲狀態 ══════════
+let G = null;
+let combat = null;
 
 function newGame() {
   return {
-    gold: 100,
-    xp: 0, level: 1,
-    stats: { hp:80, maxHp:80, mp:40, maxMp:40, atk:10, def:5, matk:8, mdef:5, spd:8 },
-    dice: [
+    gold:100, xp:0, level:1,
+    stats:{ hp:80,maxHp:80,mp:40,maxMp:40,atk:10,def:5,matk:8,mdef:5,spd:8 },
+    dice:[
       { faces:['atk','atk','def','sp','none','none'] },
       { faces:['atk','atk','def','sp','none','none'] },
       { faces:['atk','atk','def','sp','none','none'] },
     ],
-    skills: ['slash'],        // 已學技能
-    quests: [                 // 進行中任務
-      { id:'q1', progress:0 },
-    ],
-    statUpgrades: { atk:0, def:0, matk:0, mdef:0, spd:0, hp:0, mp:0 },
+    skills:['slash'],
+    quests:[{ id:'q1', progress:0 }],
+    bag:[], bagMax:2,
+    statUpgrades:{},
   };
 }
 
-// ══════════════════════════════════════════
-//  存讀檔
-// ══════════════════════════════════════════
-function saveGame() {
-  localStorage.setItem('diceRPG_save', JSON.stringify(G));
-  toast('存檔成功 ◆');
-}
-function loadGame() {
-  const s = localStorage.getItem('diceRPG_save');
-  return s ? JSON.parse(s) : null;
-}
-function deleteSave() {
-  if (!confirm('確定刪除存檔？')) return;
-  localStorage.removeItem('diceRPG_save');
-  G = null;
-  updateMainMenu();
-  showScreen('screen-main');
-  toast('存檔已刪除');
-}
-function hasSave() { return !!localStorage.getItem('diceRPG_save'); }
+// ══════════ 存讀檔 ══════════
+function saveGame(){ localStorage.setItem('diceRPG_save',JSON.stringify(G)); toast('存檔成功 ◆'); }
+function loadGame(){ const s=localStorage.getItem('diceRPG_save'); return s?JSON.parse(s):null; }
+function deleteSave(){ localStorage.removeItem('diceRPG_save'); G=null; updateMainMenu(); showScreen('screen-main'); toast('存檔已刪除'); }
+function hasSave(){ return !!localStorage.getItem('diceRPG_save'); }
 
-// ══════════════════════════════════════════
-//  畫面切換
-// ══════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+// ══════════ 畫面 ══════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'screen-tavern')   renderTavern();
-  if (id === 'screen-barracks') renderBarracks();
-  if (id === 'screen-alchemy')  renderAlchemy();
-  if (id === 'screen-town')     renderTown();
+  if(id==='screen-tavern')   renderTavern();
+  if(id==='screen-barracks') renderBarracks();
+  if(id==='screen-alchemy')  renderAlchemy();
+  if(id==='screen-town')     document.getElementById('town-gold').textContent=G.gold;
+  if(id==='screen-shop')     renderShop();
 }
 
-function renderTown() {
-  document.getElementById('town-gold').textContent = G.gold;
+function updateMainMenu(){
+  const btn=document.getElementById('btn-continue');
+  hasSave()?btn.removeAttribute('disabled'):btn.setAttribute('disabled','');
 }
+function startNew(){ G=newGame(); saveGame(); showScreen('screen-town'); }
+function continueGame(){ G=loadGame(); if(G) showScreen('screen-town'); }
 
-// ══════════════════════════════════════════
-//  主選單
-// ══════════════════════════════════════════
-function updateMainMenu() {
-  const btn = document.getElementById('btn-continue');
-  if (hasSave()) {
-    btn.removeAttribute('disabled');
-    btn.querySelector('.btn-inner').style.opacity = '1';
-  } else {
-    btn.setAttribute('disabled','');
-    btn.querySelector('.btn-inner').style.opacity = '0.35';
-  }
-}
-function startNew() {
-  G = newGame();
-  saveGame();
-  showScreen('screen-town');
-}
-function continueGame() {
-  G = loadGame();
-  if (!G) return;
-  showScreen('screen-town');
-}
-
-// ══════════════════════════════════════════
-//  酒館
-// ══════════════════════════════════════════
-function renderTavern() {
-  document.getElementById('tavern-gold').textContent = G.gold;
-
-  // 角色資訊
-  const s = G.stats;
-  document.getElementById('tavern-char-info').innerHTML = `
-    <div class="bar-row">
-      <div class="bar-label">HP ${s.hp}/${s.maxHp}</div>
-      <div class="bar-bg"><div class="bar-fill bar-hp" style="width:${s.hp/s.maxHp*100}%"></div></div>
-    </div>
-    <div class="bar-row">
-      <div class="bar-label">MP ${s.mp}/${s.maxMp}</div>
-      <div class="bar-bg"><div class="bar-fill bar-mp" style="width:${s.mp/s.maxMp*100}%"></div></div>
-    </div>
+// ══════════ 酒館 ══════════
+function renderTavern(){
+  document.getElementById('tavern-gold').textContent=G.gold;
+  const s=G.stats;
+  document.getElementById('tavern-char-info').innerHTML=`
+    <div class="bar-row"><div class="bar-label">HP ${s.hp}/${s.maxHp}</div><div class="bar-bg"><div class="bar-fill bar-hp" style="width:${s.hp/s.maxHp*100}%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">MP ${s.mp}/${s.maxMp}</div><div class="bar-bg"><div class="bar-fill bar-mp" style="width:${s.mp/s.maxMp*100}%"></div></div></div>
     <div class="stat-grid mt8">
       <div class="stat-item"><span class="stat-label">物攻</span><span class="stat-val">${s.atk}</span></div>
       <div class="stat-item"><span class="stat-label">物防</span><span class="stat-val">${s.def}</span></div>
@@ -507,415 +421,378 @@ function renderTavern() {
       <div class="stat-item"><span class="stat-label">等級</span><span class="stat-val">${G.level}</span></div>
     </div>`;
 
-  // 骰子
-  const diceEl = document.getElementById('tavern-dice-info');
-  diceEl.innerHTML = '';
-  G.dice.forEach((d,i) => {
-    d.faces.forEach(f => {
-      const ft = FACE_TYPES[f];
-      const el = document.createElement('div');
-      el.className = `die ${ft.cls}`;
-      el.innerHTML = `<span class="die-icon">${ft.icon}</span><span class="die-label">${ft.label}</span>`;
-      diceEl.appendChild(el);
-    });
-    if (i < G.dice.length-1) {
-      const sep = document.createElement('div');
-      sep.style.cssText='width:100%;height:1px;background:rgba(200,160,80,.15);margin:4px 0;';
-      diceEl.appendChild(sep);
-    }
+  const dEl=document.getElementById('tavern-dice-info'); dEl.innerHTML='';
+  G.dice.forEach((d,i)=>{
+    d.faces.forEach(f=>{ const el=makeDieEl(f,true); el.style.cursor='default'; dEl.appendChild(el); });
+    if(i<G.dice.length-1){ const sep=document.createElement('div'); sep.style.cssText='width:100%;height:1px;background:rgba(200,160,80,.15);margin:4px 0;'; dEl.appendChild(sep); }
   });
 
-  // 任務
-  const qEl = document.getElementById('tavern-quests');
-  if (G.quests.length === 0) { qEl.innerHTML='<div class="dim" style="font-size:12px;">目前沒有任務</div>'; return; }
-  qEl.innerHTML = G.quests.map(q => {
-    const def = QUESTS_DEF.find(d=>d.id===q.id);
-    const canClaim = q.progress >= def.need;
+  document.getElementById('bag-cap-label').textContent=`${G.bag.length}/${G.bagMax}`;
+  renderBagDisplay('tavern-bag', false);
+
+  const qEl=document.getElementById('tavern-quests');
+  if(!G.quests.length){ qEl.innerHTML='<div class="dim" style="font-size:12px;">目前沒有任務</div>'; return; }
+  qEl.innerHTML=G.quests.map(q=>{
+    const def=QUESTS_DEF.find(d=>d.id===q.id);
+    const can=q.progress>=def.need;
+    const rewardStr=`${def.reward.gold}金${def.reward.xp?'＋'+def.reward.xp+'XP':''}${def.reward.items.length?'＋物品':''}`;
     return `<div class="quest-item">
       <div class="quest-name">${def.name}</div>
-      <div class="quest-prog">${def.desc}：${q.progress}/${def.need}
-        ${canClaim ? `<button class="btn btn-sm" style="display:inline-block;width:80px;margin-left:8px;" onclick="claimQuest('${q.id}')"><div class="btn-inner" style="padding:4px 8px;font-size:11px;">領取</div></button>` : ''}
+      <div class="quest-prog">目標：${def.target} ${q.progress}/${def.need}　獎勵：${rewardStr}
+        ${can?`<button class="btn btn-sm" style="display:inline-block;width:70px;margin-left:6px;" onclick="claimQuest('${q.id}')"><div class="btn-inner" style="padding:4px 8px;font-size:11px;">領取</div></button>`:''}
       </div>
     </div>`;
   }).join('');
 }
 
-function claimQuest(qid) {
-  const idx = G.quests.findIndex(q=>q.id===qid);
-  if (idx<0) return;
-  const def = QUESTS_DEF.find(d=>d.id===qid);
-  G.gold += def.reward.gold;
-  G.xp   += def.reward.xp;
-  G.quests.splice(idx,1);
-  checkLevelUp();
-  toast(`任務完成！獲得 ${def.reward.gold} 金幣`);
-  renderTavern();
+function renderBagDisplay(elId, withSell){
+  const el=document.getElementById(elId); el.innerHTML='';
+  if(!G.bag.length){ el.innerHTML='<div class="item-empty">背包空空如也</div>'; return; }
+  const grid=document.createElement('div'); grid.className='item-grid';
+  G.bag.forEach((itemId,i)=>{
+    const def=ITEMS_DEF[itemId];
+    const card=document.createElement('div'); card.className='item-card';
+    card.innerHTML=`<span class="item-icon">${def.icon}</span><div class="item-name">${def.name}</div><div class="item-desc">${withSell?'賣出 '+def.sellPrice+' 金':def.desc}</div>`;
+    if(withSell) card.onclick=()=>sellItem(i);
+    grid.appendChild(card);
+  });
+  el.appendChild(grid);
 }
 
-// ══════════════════════════════════════════
-//  兵營
-// ══════════════════════════════════════════
-const STAT_LABELS = { atk:'物攻', def:'物防', matk:'魔攻', mdef:'魔防', spd:'速度', hp:'最大HP', mp:'最大MP' };
-function renderBarracks() {
-  document.getElementById('barracks-gold').textContent = G.gold;
-  const s = G.stats;
-  document.getElementById('barracks-stats').innerHTML =
+function claimQuest(qid){
+  const idx=G.quests.findIndex(q=>q.id===qid); if(idx<0)return;
+  const def=QUESTS_DEF.find(d=>d.id===qid);
+  G.gold+=def.reward.gold; G.xp+=def.reward.xp||0;
+  def.reward.items.forEach(id=>addToBag(id));
+  G.quests.splice(idx,1);
+  checkLevelUp(); toast(`任務完成！獲得 ${def.reward.gold} 金`); renderTavern();
+}
+
+function addToBag(itemId){
+  if(G.bag.length>=G.bagMax){ toast('背包已滿！'); return false; }
+  G.bag.push(itemId); return true;
+}
+
+// ══════════ 商店 ══════════
+function renderShop(){
+  document.getElementById('shop-gold').textContent=G.gold;
+  document.getElementById('shop-bag-cap').textContent=` ${G.bag.length}/${G.bagMax}`;
+  const buyEl=document.getElementById('shop-buy');
+  const grid=document.createElement('div'); grid.className='item-grid';
+  Object.values(ITEMS_DEF).forEach(def=>{
+    const card=document.createElement('div'); card.className='item-card';
+    card.innerHTML=`<span class="item-icon">${def.icon}</span><div class="item-name">${def.name}</div><div class="item-desc">${def.desc}</div><div class="item-desc" style="color:#f0d080;margin-top:4px;">💰 ${def.buyPrice}</div>`;
+    card.onclick=()=>buyItem(def.id);
+    grid.appendChild(card);
+  });
+  buyEl.innerHTML=''; buyEl.appendChild(grid);
+  renderBagDisplay('shop-bag', true);
+}
+
+function buyItem(id){
+  const def=ITEMS_DEF[id];
+  if(G.gold<def.buyPrice){ toast('金幣不足'); return; }
+  if(!addToBag(id)) return;
+  G.gold-=def.buyPrice; toast(`購入 ${def.name}`); renderShop();
+}
+
+function sellItem(idx){
+  const def=ITEMS_DEF[G.bag[idx]];
+  G.gold+=def.sellPrice; G.bag.splice(idx,1);
+  toast(`賣出 ${def.name}，獲得 ${def.sellPrice} 金`); renderShop();
+}
+
+// ══════════ 兵營 ══════════
+const STAT_LABELS={atk:'物攻',def:'物防',matk:'魔攻',mdef:'魔防',spd:'速度',hp:'最大HP',mp:'最大MP'};
+function renderBarracks(){
+  document.getElementById('barracks-gold').textContent=G.gold;
+  const s=G.stats;
+  document.getElementById('barracks-stats').innerHTML=
     Object.keys(STAT_LABELS).map(k=>`
       <div class="upgrade-row">
         <span style="font-size:13px;">${STAT_LABELS[k]} <span class="gold">${k==='hp'?s.maxHp:k==='mp'?s.maxMp:s[k]}</span></span>
-        <span class="upgrade-cost">50金</span>
+        <span style="font-size:11px;color:#c8a96e;">50金</span>
         <button class="btn btn-sm" style="width:70px;" onclick="upgradeStat('${k}')"><div class="btn-inner">強化</div></button>
       </div>`).join('');
-
-  const learnedIds = G.skills;
-  document.getElementById('barracks-skills').innerHTML =
+  document.getElementById('barracks-skills').innerHTML=
     SKILLS_DEF.map(sk=>{
-      const learned = learnedIds.includes(sk.id);
+      const learned=G.skills.includes(sk.id);
       return `<div class="quest-item">
-        <div class="quest-name">${sk.name} ${learned?'<span class="green">✓</span>':''}</div>
+        <div class="quest-name">${sk.name}${learned?' <span class="green">✓</span>':''}</div>
         <div class="quest-prog">${sk.desc}</div>
-        ${!learned?`<button class="btn btn-sm" style="width:90px;margin-top:6px;" onclick="learnSkill('${sk.id}')"><div class="btn-inner">學習 80金</div></button>`:''}
+        ${!learned?`<button class="btn btn-sm" style="width:100px;margin-top:6px;" onclick="learnSkill('${sk.id}')"><div class="btn-inner">學習 80金</div></button>`:''}
       </div>`;
     }).join('');
 }
-function upgradeStat(key) {
-  if (G.gold < 50) { toast('金幣不足'); return; }
-  G.gold -= 50;
-  if (key==='hp') { G.stats.maxHp+=10; G.stats.hp=Math.min(G.stats.hp+10,G.stats.maxHp); }
-  else if (key==='mp') { G.stats.maxMp+=10; G.stats.mp=Math.min(G.stats.mp+10,G.stats.maxMp); }
+function upgradeStat(key){
+  if(G.gold<50){toast('金幣不足');return;}
+  G.gold-=50;
+  if(key==='hp'){G.stats.maxHp+=10;G.stats.hp=Math.min(G.stats.hp+10,G.stats.maxHp);}
+  else if(key==='mp'){G.stats.maxMp+=10;G.stats.mp=Math.min(G.stats.mp+10,G.stats.maxMp);}
   else G.stats[key]+=2;
-  toast(`${STAT_LABELS[key]} 強化成功`);
-  renderBarracks();
+  toast(`${STAT_LABELS[key]} 強化`); renderBarracks();
 }
-function learnSkill(id) {
-  if (G.gold < 80) { toast('金幣不足'); return; }
-  if (G.skills.includes(id)) { toast('已學習'); return; }
-  G.gold -= 80;
-  G.skills.push(id);
-  toast('技能習得！');
-  renderBarracks();
+function learnSkill(id){
+  if(G.gold<80){toast('金幣不足');return;}
+  G.gold-=80; G.skills.push(id); toast('技能習得！'); renderBarracks();
 }
 
-// ══════════════════════════════════════════
-//  煉金工坊
-// ══════════════════════════════════════════
-const FACE_UPGRADE_TARGETS = ['atk','def','sp','matk'];
-function renderAlchemy() {
-  document.getElementById('alchemy-gold').textContent = G.gold;
-  let html = '';
+// ══════════ 煉金工坊 ══════════
+const FACE_OPTIONS=['atk','def','sp','matk'];
+function renderAlchemy(){
+  document.getElementById('alchemy-gold').textContent=G.gold;
+  let html='';
   G.dice.forEach((d,di)=>{
-    html += `<div style="margin-bottom:12px;"><div class="dim" style="font-size:11px;letter-spacing:2px;margin-bottom:6px;">骰子 ${di+1}</div>`;
-    html += `<div class="dice-row" style="justify-content:flex-start;">`;
-    d.faces.forEach((f,fi)=>{
-      const ft = FACE_TYPES[f];
-      html += `<div class="die ${ft.cls}" style="width:48px;height:48px;cursor:default;">
-        <span class="die-icon">${ft.icon}</span><span class="die-label">${ft.label}</span>
-      </div>`;
+    html+=`<div style="margin-bottom:14px;"><div class="dim" style="font-size:11px;letter-spacing:2px;margin-bottom:6px;">骰子 ${di+1}</div><div class="dice-row" style="justify-content:flex-start;">`;
+    d.faces.forEach(f=>{
+      const el=makeDieEl(f,true); el.style.cursor='default';
+      html+=el.outerHTML;
     });
-    html += `</div>`;
-    // 每面可升級
+    html+=`</div>`;
     d.faces.forEach((f,fi)=>{
-      if (f==='none') {
-        html += `<div class="upgrade-row">
-          <span style="font-size:12px;">第${fi+1}面（空白）→ 解鎖</span>
+      if(f==='none'){
+        html+=`<div class="upgrade-row" style="flex-wrap:wrap;gap:6px;">
+          <span style="font-size:12px;">第${fi+1}面解鎖</span>
           <select id="sel-${di}-${fi}" style="background:#1a1208;color:#e8d5a3;border:1px solid rgba(200,160,80,.3);padding:4px;font-size:12px;border-radius:3px;">
-            ${FACE_UPGRADE_TARGETS.map(t=>`<option value="${t}">${FACE_TYPES[t].label}</option>`).join('')}
+            ${FACE_OPTIONS.map(t=>`<option value="${t}">${FACE_TYPES[t].label}</option>`).join('')}
           </select>
           <button class="btn btn-sm" style="width:70px;" onclick="upgradeFace(${di},${fi})"><div class="btn-inner">80金</div></button>
         </div>`;
       }
     });
-    html += `</div>`;
+    html+=`</div>`;
   });
-  document.getElementById('alchemy-dice').innerHTML = html;
+  document.getElementById('alchemy-dice').innerHTML=html;
 }
-function upgradeFace(di,fi) {
-  if (G.gold < 80) { toast('金幣不足'); return; }
-  const sel = document.getElementById(`sel-${di}-${fi}`);
-  G.gold -= 80;
-  G.dice[di].faces[fi] = sel.value;
-  toast('骰子強化成功！');
-  renderAlchemy();
+function upgradeFace(di,fi){
+  if(G.gold<80){toast('金幣不足');return;}
+  const sel=document.getElementById(`sel-${di}-${fi}`);
+  G.gold-=80; G.dice[di].faces[fi]=sel.value; toast('骰子強化成功！'); renderAlchemy();
 }
 
-// ══════════════════════════════════════════
-//  冒險/戰鬥
-// ══════════════════════════════════════════
-function enterAdventure() {
-  combat = {
-    floor: 1, maxFloor: 10,
-    enemy: null,
-    rolled: [],       // 本回合骰子結果（face types）
-    rerolled: false,  // 本回合是否已重擲
-    shield: false,    // 玩家護盾狀態
-    log: [],
-  };
-  nextFloor();
-  showScreen('screen-combat');
+// ══════════ 冒險/戰鬥 ══════════
+function enterAdventure(){
+  combat={ floor:1, maxFloor:10, enemy:null, rolled:[], rerolled:false, shield:false, atkBuf:0, defBuf:0, itemUsed:false, log:[] };
+  nextFloor(); showScreen('screen-combat');
 }
 
-function nextFloor() {
-  if (combat.floor > combat.maxFloor) { endAdventure(); return; }
-  // 選怪（依關卡加權）
-  const pool = combat.floor <= 3 ? [0,0,1] : combat.floor <= 6 ? [0,1,1,2] : [1,2,3,4];
-  const idx = pool[Math.floor(Math.random()*pool.length)];
-  const tmpl = ENEMIES[idx];
-  combat.enemy = {
-    ...tmpl,
-    curHp: tmpl.hp,
-    nextAction: pickEnemyAction(tmpl),
-  };
-  combat.shield = false;
-  document.getElementById('combat-floor').textContent = `第 ${combat.floor} 關`;
-  rollDice();
-  renderCombat();
-  addLog(`⚔️ 遭遇 ${combat.enemy.name}！`, 'info');
+function nextFloor(){
+  if(combat.floor>combat.maxFloor){ endAdventure(); return; }
+  const isBoss = combat.floor===combat.maxFloor;
+  let pool;
+  if(isBoss) pool=[4];
+  else if(combat.floor<=3) pool=[0,0,1];
+  else if(combat.floor<=6) pool=[0,1,1,2];
+  else pool=[1,2,3,2,3];
+  const idx=pool[Math.floor(Math.random()*pool.length)];
+  const tmpl=ENEMIES[idx];
+  combat.enemy={ ...tmpl, curHp:tmpl.hp, nextAction:pickAction(tmpl) };
+  combat.shield=false; combat.atkBuf=0; combat.defBuf=0; combat.itemUsed=false;
+  document.getElementById('combat-floor').textContent=`第 ${combat.floor} 關${isBoss?' 👑BOSS':''}`;
+  rollDice(); renderCombat();
+  addLog(`${isBoss?'👑 BOSS！':'⚔️ '} 遭遇 ${combat.enemy.name}！`,'info');
 }
 
-function pickEnemyAction(e) {
-  return e.actions[Math.floor(Math.random()*e.actions.length)];
+function pickAction(e){ return e.actions[Math.floor(Math.random()*e.actions.length)]; }
+
+function rollDice(){
+  combat.rolled=G.dice.map(d=>d.faces[Math.floor(Math.random()*d.faces.length)]);
+  combat.rerolled=false;
 }
 
-function rollDice() {
-  combat.rolled = G.dice.map(d => d.faces[Math.floor(Math.random()*d.faces.length)]);
-  combat.rerolled = false;
-  combat.shield = false;
-}
-
-function rerollDie(idx) {
-  if (combat.rerolled) { toast('每回合只能重擲一次'); return; }
-  const die = document.querySelectorAll('#combat-dice .die')[idx];
-  die.classList.add('rolling');
+function rerollDie(idx){
+  if(combat.rerolled){toast('每回合只能重擲一次');return;}
+  const dies=document.querySelectorAll('#combat-dice .die');
+  dies[idx].classList.add('rolling');
   setTimeout(()=>{
-    die.classList.remove('rolling');
-    combat.rolled[idx] = G.dice[idx].faces[Math.floor(Math.random()*G.dice[idx].faces.length)];
-    combat.rerolled = true;
+    dies[idx].classList.remove('rolling');
+    combat.rolled[idx]=G.dice[idx].faces[Math.floor(Math.random()*G.dice[idx].faces.length)];
+    combat.rerolled=true;
     renderCombatDice();
-    checkSkillHint();
-  }, 420);
+  },420);
 }
 
-function renderCombat() {
-  const e = combat.enemy;
-  document.getElementById('enemy-name').textContent = e.name;
-  updateEnemyHp();
-  updatePlayerBars();
-  renderCombatDice();
-  checkSkillHint();
-  const actionMap = { attack:'⚔️ 準備攻擊', heavy:'💢 準備重擊', defend:'🛡️ 準備防禦' };
-  document.getElementById('enemy-intent').textContent = actionMap[e.nextAction] || '';
+function renderCombat(){
+  updateEnemyHp(); updatePlayerBars(); renderCombatDice();
+  document.getElementById('enemy-name').textContent=combat.enemy.name;
+  const amap={attack:'⚔️ 準備攻擊',heavy:'💢 準備重擊',defend:'🛡️ 準備防禦'};
+  document.getElementById('enemy-intent').textContent=amap[combat.enemy.nextAction]||'';
 }
 
-function renderCombatDice() {
-  const el = document.getElementById('combat-dice');
-  el.innerHTML = '';
+function renderCombatDice(){
+  const el=document.getElementById('combat-dice'); el.innerHTML='';
   combat.rolled.forEach((f,i)=>{
-    const ft = FACE_TYPES[f];
-    const d = document.createElement('div');
-    d.className = `die ${ft.cls}`;
-    d.innerHTML = `<span class="die-icon">${ft.icon}</span><span class="die-label">${ft.label}</span>`;
-    d.onclick = ()=> rerollDie(i);
+    const d=makeDieEl(f);
+    d.onclick=()=>rerollDie(i);
     el.appendChild(d);
   });
 }
 
-function checkSkillHint() {
-  const counts = faceCounts();
-  const hints = [];
-  G.skills.forEach(sid => {
-    const sk = SKILLS_DEF.find(s=>s.id===sid);
-    if (!sk) return;
-    const ok = Object.entries(sk.req).every(([t,n])=> n===0 || (counts[t]||0)>=n);
-    if (ok) hints.push(`✨ 可觸發：${sk.name}`);
+// 技能判斷
+function faceCounts(){ const c={}; combat.rolled.forEach(f=>{c[f]=(c[f]||0)+1;}); return c; }
+function getTriggerable(){
+  const counts=faceCounts();
+  return G.skills.filter(sid=>{
+    const sk=SKILLS_DEF.find(s=>s.id===sid); if(!sk)return false;
+    const mpOk=sk.mpCost===0||G.stats.mp>=sk.mpCost;
+    return mpOk && Object.entries(sk.req).every(([t,n])=>(counts[t]||0)>=n);
+  }).map(sid=>SKILLS_DEF.find(s=>s.id===sid));
+}
+
+function openSkillOrAttack(){
+  const avail=getTriggerable();
+  if(!avail.length){ doNormalAttack(); return; }
+  const el=document.getElementById('skill-options'); el.innerHTML='';
+  avail.forEach(sk=>{
+    const div=document.createElement('div'); div.className='skill-option';
+    div.innerHTML=`<div class="skill-option-name">${sk.name}</div><div class="skill-option-desc">${sk.desc}</div>${sk.mpCost?`<div class="skill-option-mp">消耗 ${sk.mpCost} MP</div>`:''}`;
+    div.onclick=()=>{ closeSkillOverlay(); doSkill(sk.id); };
+    el.appendChild(div);
   });
-  document.getElementById('skill-hint').textContent = hints.join('　');
+  document.getElementById('skill-overlay').classList.add('show');
 }
+function closeSkillOverlay(){ document.getElementById('skill-overlay').classList.remove('show'); }
 
-function faceCounts() {
-  const c = {};
-  combat.rolled.forEach(f=>{ c[f]=(c[f]||0)+1; });
-  return c;
+// 物品
+function openItemMenu(){
+  if(!G.bag.length){toast('背包是空的');return;}
+  if(combat.itemUsed){toast('本關已使用過物品');return;}
+  const el=document.getElementById('item-options'); el.innerHTML='';
+  G.bag.forEach((id,i)=>{
+    const def=ITEMS_DEF[id];
+    const div=document.createElement('div'); div.className='skill-option';
+    div.innerHTML=`<div class="skill-option-name">${def.icon} ${def.name}</div><div class="skill-option-desc">${def.desc}</div>`;
+    div.onclick=()=>{ closeItemOverlay(); useItem(i); };
+    el.appendChild(div);
+  });
+  document.getElementById('item-overlay').style.display='flex';
 }
+function closeItemOverlay(){ document.getElementById('item-overlay').style.display='none'; }
 
-function playerAttack() {
-  if (!combat.enemy) return;
-  const s = G.stats;
-  const counts = faceCounts();
-  let dmg = 0, heal = 0, msg = '';
-
-  // 嘗試觸發技能
-  let triggered = null;
-  for (const sid of G.skills) {
-    const sk = SKILLS_DEF.find(s=>s.id===sid);
-    if (!sk) continue;
-    const ok = Object.entries(sk.req).every(([t,n])=> n===0 || (counts[t]||0)>=n);
-    if (ok && (sk.mpCost===0 || G.stats.mp>=sk.mpCost)) {
-      triggered = sk; break;
-    }
+function useItem(idx){
+  const id=G.bag[idx]; const def=ITEMS_DEF[id];
+  G.bag.splice(idx,1); combat.itemUsed=true;
+  if(id==='hp_pot'){ G.stats.hp=Math.min(G.stats.hp+20,G.stats.maxHp); addLog(`🧪 使用 ${def.name}，恢復 20 HP`,'heal'); }
+  else if(id==='mp_pot'){ G.stats.mp=Math.min(G.stats.mp+10,G.stats.maxMp); addLog(`💧 使用 ${def.name}，恢復 10 MP`,'heal'); }
+  else if(id==='atk_buf'){ combat.atkBuf+=5; addLog(`⚔️ 使用 ${def.name}，本關攻擊+5`,'skill'); }
+  else if(id==='def_buf'){ combat.defBuf+=5; addLog(`🛡️ 使用 ${def.name}，本關防禦+5`,'skill'); }
+  else if(id==='escape'){
+    if(combat.floor===combat.maxFloor){toast('Boss關無法逃脫');G.bag.splice(idx,0,id);combat.itemUsed=false;return;}
+    addLog(`🪢 使用逃脫繩索，跳過本關！`,'info');
+    combat.floor++;
+    setTimeout(()=>nextFloor(),600);
+    return;
   }
-
-  if (triggered) {
-    G.stats.mp -= triggered.mpCost;
-    if (triggered.effect === 'shield') {
-      combat.shield = true;
-      addLog(`🛡️ 技能【${triggered.name}】：本回合傷害大幅減少！`, 'skill');
-    } else if (triggered.effect === 'heal') {
-      heal = Math.floor(s.maxHp * 0.2);
-      G.stats.hp = Math.min(G.stats.hp + heal, s.maxHp);
-      addLog(`💚 技能【${triggered.name}】：回復 ${heal} HP`, 'skill');
-    } else {
-      dmg = Math.max(1, Math.floor(s.atk * triggered.dmgMult) - combat.enemy.def);
-      addLog(`✨ 技能【${triggered.name}】：造成 ${dmg} 點傷害！`, 'skill');
-    }
-  } else {
-    // 普通攻擊
-    const atkCount = (counts['atk']||0);
-    const matkCount = (counts['matk']||0);
-    if (atkCount > 0) {
-      dmg += Math.max(1, s.atk * atkCount - combat.enemy.def);
-    }
-    if (matkCount > 0) {
-      dmg += Math.max(1, s.matk * matkCount - combat.enemy.mdef||0);
-    }
-    if (dmg > 0) addLog(`⚔️ 攻擊！造成 ${dmg} 點傷害`, 'dmg');
-    else addLog(`🎲 本回合沒有攻擊效果`, 'info');
-  }
-
-  if (dmg > 0) {
-    combat.enemy.curHp -= dmg;
-    updateEnemyHp();
-  }
-
-  if (combat.enemy.curHp <= 0) { enemyDied(); return; }
-
-  // 敵人行動
-  enemyTurn();
-}
-
-function skipTurn() {
-  addLog('⏭️ 跳過回合', 'info');
-  enemyTurn();
-}
-
-function enemyTurn() {
-  const e = combat.enemy;
-  const s = G.stats;
-  const action = e.nextAction;
-  let dmg = 0;
-
-  if (action === 'attack') {
-    dmg = Math.max(1, e.atk - s.def);
-    if (combat.shield) dmg = Math.max(1, Math.floor(dmg*0.4));
-    G.stats.hp -= dmg;
-    addLog(`${e.name} 攻擊！你受到 ${dmg} 點傷害`, 'dmg');
-  } else if (action === 'heavy') {
-    dmg = Math.max(1, Math.floor(e.atk*1.6) - s.def);
-    if (combat.shield) dmg = Math.max(1, Math.floor(dmg*0.4));
-    G.stats.hp -= dmg;
-    addLog(`${e.name} 重擊！你受到 ${dmg} 點傷害`, 'dmg');
-  } else {
-    addLog(`${e.name} 防禦姿態`, 'info');
-  }
-
-  G.stats.hp = Math.max(0, G.stats.hp);
   updatePlayerBars();
-
-  if (G.stats.hp <= 0) { gameOver(); return; }
-
-  // 下回合
-  e.nextAction = pickEnemyAction(e);
-  rollDice();
-  renderCombatDice();
-  checkSkillHint();
-  const actionMap = { attack:'⚔️ 準備攻擊', heavy:'💢 準備重擊', defend:'🛡️ 準備防禦' };
-  document.getElementById('enemy-intent').textContent = actionMap[e.nextAction]||'';
 }
 
-function enemyDied() {
-  const e = combat.enemy;
-  addLog(`🏆 擊敗 ${e.name}！獲得 ${e.gold} 金幣`, 'heal');
-  G.gold += e.gold;
-  G.xp   += e.xp;
-  // 任務進度
-  G.quests.forEach(q=>{
-    const def = QUESTS_DEF.find(d=>d.id===q.id);
-    if (def && e.type===def.target && q.progress<def.need) q.progress++;
-  });
+// 普通攻擊
+function doNormalAttack(){
+  const s=G.stats; const counts=faceCounts();
+  let dmg=0;
+  const atkN=counts['atk']||0; const matkN=counts['matk']||0;
+  if(atkN>0) dmg+=Math.max(1,s.atk*atkN+combat.atkBuf-combat.enemy.def);
+  if(matkN>0) dmg+=Math.max(1,s.matk*matkN-combat.enemy.mdef);
+  if(dmg>0){ addLog(`⚔️ 攻擊！造成 ${dmg} 點傷害`,'dmg'); applyDmgToEnemy(dmg); }
+  else addLog('🎲 本回合沒有攻擊骰面','info');
+  if(combat.enemy.curHp>0) enemyTurn();
+}
+
+// 技能
+function doSkill(sid){
+  const sk=SKILLS_DEF.find(s=>s.id===sid); if(!sk)return;
+  G.stats.mp-=sk.mpCost;
+  if(sk.effect==='shield'){
+    combat.shield=true; addLog(`🛡️ 技能【${sk.name}】：本回合傷害大幅減少！`,'skill');
+    enemyTurn(); return;
+  }
+  if(sk.effect==='heal'){
+    const h=Math.floor(G.stats.maxHp*0.2);
+    G.stats.hp=Math.min(G.stats.hp+h,G.stats.maxHp);
+    addLog(`💚 技能【${sk.name}】：回復 ${h} HP`,'skill');
+    updatePlayerBars(); enemyTurn(); return;
+  }
+  const s=G.stats;
+  const dmg=Math.max(1,Math.floor((sk.id==='arcane'?s.matk:s.atk)*sk.dmgMult)+combat.atkBuf-combat.enemy.def);
+  addLog(`✨ 技能【${sk.name}】：造成 ${dmg} 點傷害！`,'skill');
+  applyDmgToEnemy(dmg);
+  if(combat.enemy.curHp>0) enemyTurn();
+}
+
+function applyDmgToEnemy(dmg){
+  combat.enemy.curHp-=dmg; updateEnemyHp();
+  if(combat.enemy.curHp<=0) enemyDied();
+}
+
+function skipTurn(){ addLog('⏭️ 跳過回合','info'); enemyTurn(); }
+
+function enemyTurn(){
+  if(!combat.enemy||combat.enemy.curHp<=0)return;
+  const e=combat.enemy; const s=G.stats;
+  const action=e.nextAction; let dmg=0;
+  const playerDef=s.def+combat.defBuf;
+  if(action==='attack'){ dmg=Math.max(1,e.atk-playerDef); if(combat.shield)dmg=Math.max(1,Math.floor(dmg*.4)); G.stats.hp-=dmg; addLog(`${e.name} 攻擊！你受到 ${dmg} 傷害`,'dmg'); }
+  else if(action==='heavy'){ dmg=Math.max(1,Math.floor(e.atk*1.6)-playerDef); if(combat.shield)dmg=Math.max(1,Math.floor(dmg*.4)); G.stats.hp-=dmg; addLog(`${e.name} 重擊！你受到 ${dmg} 傷害`,'dmg'); }
+  else addLog(`${e.name} 防禦姿態`,'info');
+  G.stats.hp=Math.max(0,G.stats.hp); updatePlayerBars();
+  if(G.stats.hp<=0){ gameOver(); return; }
+  e.nextAction=pickAction(e);
+  const amap={attack:'⚔️ 準備攻擊',heavy:'💢 準備重擊',defend:'🛡️ 準備防禦'};
+  document.getElementById('enemy-intent').textContent=amap[e.nextAction]||'';
+  rollDice(); renderCombatDice();
+}
+
+function enemyDied(){
+  const e=combat.enemy;
+  addLog(`🏆 擊敗 ${e.name}！獲得 ${e.gold} 金幣`,'heal');
+  G.gold+=e.gold; G.xp+=e.xp;
+  G.quests.forEach(q=>{ const def=QUESTS_DEF.find(d=>d.id===q.id); if(def&&e.type===def.target&&q.progress<def.need)q.progress++; });
+  // 關卡掉落
+  const drops=['hp_pot','mp_pot',null,null,null];
+  const drop=drops[Math.floor(Math.random()*drops.length)];
+  if(drop&&G.bag.length<G.bagMax){ G.bag.push(drop); addLog(`💎 掉落：${ITEMS_DEF[drop].name}`,'heal'); }
   checkLevelUp();
   combat.floor++;
-  setTimeout(()=>{
-    if (combat.floor > combat.maxFloor) { endAdventure(); }
-    else { nextFloor(); }
-  }, 800);
+  setTimeout(()=>{ if(combat.floor>combat.maxFloor)endAdventure(); else nextFloor(); },800);
 }
 
-function endAdventure() {
-  addLog('🌟 冒險結束，返回城鎮', 'info');
-  setTimeout(()=>{ showScreen('screen-town'); toast('冒險完成！'); }, 1200);
+function endAdventure(){ addLog('🌟 冒險結束，返回城鎮','info'); setTimeout(()=>{ showScreen('screen-town'); toast('冒險完成！'); },1200); }
+
+function gameOver(){
+  addLog('💀 你已倒下...','dmg');
+  G.stats.hp=Math.floor(G.stats.maxHp*0.3);
+  setTimeout(()=>{ toast('你已倒下，以30%HP返回城鎮'); showScreen('screen-town'); },1000);
 }
 
-function gameOver() {
-  addLog('💀 你已倒下...', 'dmg');
-  G.stats.hp = Math.floor(G.stats.maxHp * 0.3);
-  setTimeout(()=>{
-    alert('你已倒下。以 30% HP 返回城鎮。');
-    showScreen('screen-town');
-  }, 800);
+function updateEnemyHp(){
+  const e=combat.enemy;
+  document.getElementById('enemy-hp-text').textContent=`${Math.max(0,e.curHp)}/${e.hp}`;
+  document.getElementById('enemy-hp-bar').style.width=`${Math.max(0,e.curHp/e.hp*100)}%`;
+}
+function updatePlayerBars(){
+  const s=G.stats;
+  document.getElementById('player-hp-text').textContent=`${s.hp}/${s.maxHp}`;
+  document.getElementById('player-hp-bar').style.width=`${s.hp/s.maxHp*100}%`;
+  document.getElementById('player-mp-text').textContent=`${s.mp}/${s.maxMp}`;
+  document.getElementById('player-mp-bar').style.width=`${s.mp/s.maxMp*100}%`;
+}
+function addLog(msg,type='info'){
+  combat.log.push({msg,type});
+  const el=document.getElementById('combat-log');
+  const line=document.createElement('div'); line.className=`log-line log-${type}`; line.textContent=msg;
+  el.appendChild(line); el.scrollTop=el.scrollHeight;
 }
 
-function updateEnemyHp() {
-  const e = combat.enemy;
-  document.getElementById('enemy-hp-text').textContent = `${Math.max(0,e.curHp)}/${e.hp}`;
-  document.getElementById('enemy-hp-bar').style.width = `${Math.max(0,e.curHp/e.hp*100)}%`;
-}
-function updatePlayerBars() {
-  const s = G.stats;
-  document.getElementById('player-hp-text').textContent = `${s.hp}/${s.maxHp}`;
-  document.getElementById('player-hp-bar').style.width  = `${s.hp/s.maxHp*100}%`;
-  document.getElementById('player-mp-text').textContent = `${s.mp}/${s.maxMp}`;
-  document.getElementById('player-mp-bar').style.width  = `${s.mp/s.maxMp*100}%`;
+// ══════════ 升級 ══════════
+function checkLevelUp(){
+  const needed=G.level*30;
+  if(G.xp>=needed){ G.xp-=needed; G.level++; G.stats.maxHp+=10; G.stats.hp=G.stats.maxHp; G.stats.maxMp+=5; G.stats.mp=G.stats.maxMp; G.stats.atk+=2; G.stats.def+=1; toast(`🎉 升級！Lv.${G.level}`); }
 }
 
-function addLog(msg, type='info') {
-  combat.log.push({ msg, type });
-  const el = document.getElementById('combat-log');
-  const line = document.createElement('div');
-  line.className = `log-line log-${type}`;
-  line.textContent = msg;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
-}
-
-// ══════════════════════════════════════════
-//  升級
-// ══════════════════════════════════════════
-function checkLevelUp() {
-  const needed = G.level * 30;
-  if (G.xp >= needed) {
-    G.xp -= needed;
-    G.level++;
-    G.stats.maxHp += 10; G.stats.hp = G.stats.maxHp;
-    G.stats.maxMp += 5;  G.stats.mp = G.stats.maxMp;
-    G.stats.atk += 2; G.stats.def += 1;
-    toast(`🎉 升級！Lv.${G.level}`);
-  }
-}
-
-// ══════════════════════════════════════════
-//  Toast
-// ══════════════════════════════════════════
+// ══════════ Toast ══════════
 let toastTimer;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove('show'), 2000);
-}
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2200); }
 
-// ══════════════════════════════════════════
-//  初始化
-// ══════════════════════════════════════════
 updateMainMenu();
 </script>
 
