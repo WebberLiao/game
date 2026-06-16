@@ -89,7 +89,7 @@ renderQuestsPanel();
 // ── 骰子選擇 ──
 let tempEquipped = [];
 function renderDiceSelect() {
-tempEquipped = […G.equippedDice];
+tempEquipped = [...G.equippedDice];
 document.getElementById(‘dice-owned-count’).textContent = G.allDice.length;
 const el = document.getElementById(‘tavern-dice-select’);
 el.innerHTML = ‘’;
@@ -134,7 +134,7 @@ card.querySelector(’.die-check’).textContent = isSel ? ‘✓’ : ‘’;
 
 function saveDiceSelection() {
 if (!tempEquipped.length) { toast(‘請至少選擇1顆骰子’); return; }
-G.equippedDice = […tempEquipped];
+G.equippedDice = [...tempEquipped];
 toast(`已選擇 ${G.equippedDice.length} 顆骰子出戰`);
 }
 
