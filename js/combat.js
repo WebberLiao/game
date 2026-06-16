@@ -60,7 +60,7 @@ const map = MAPS.find(m => m.id === combat.mapId);
 const isBoss = combat.floor === combat.maxFloor;
 const key = isBoss ? map.boss : map.pool[Math.floor(Math.random() * map.pool.length)];
 const tmpl = ALL_ENEMIES[key];
-combat.enemy = { …tmpl, curHp: tmpl.hp, nextAction: pickAction(tmpl) };
+combat.enemy = { ...tmpl, curHp: tmpl.hp, nextAction: pickAction(tmpl) };
 combat.shield = false; combat.evade = false; combat.counter = false;
 combat.atkBuf = 0; combat.defBuf = 0; combat.itemUsed = false;
 combat.enemyBurn = 0; combat.enemyStun = false;
@@ -257,7 +257,7 @@ if (!combat.enemy || combat.enemy.curHp <= 0) return;
 if (combat.enemyBurn > 0) {
 const bd = Math.floor(combat.enemy.hp * 0.05);
 combat.enemy.curHp -= bd;
-combat.enemyBurn–;
+combat.enemyBurn--;
 addLog(`🔥 燃燒！${combat.enemy.name} 受到 ${bd} 傷害（剩餘 ${combat.enemyBurn} 回）`, ‘skill’);
 updateEnemyHp(); renderStatusTags();
 if (combat.enemy.curHp <= 0) { enemyDied(); return; }
