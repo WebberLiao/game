@@ -8,7 +8,7 @@ gold: 200, xp: 0, level: 1, job: jobId,
 stats: JSON.parse(JSON.stringify(job.stats)),
 allDice: JSON.parse(JSON.stringify(job.dice)),
 equippedDice: [0, 1, 2],
-skills: […job.startSkills],
+skills: [...job.startSkills],
 quests: [], bag: [], bagMax: 2, clearedMaps: [],
 };
 }
