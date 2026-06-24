@@ -385,3 +385,90 @@ const NPCS = {
     }
   ]
 };
+
+// ══════════ 裝備系統 ══════════
+
+// 詞綴池（前綴 + 後綴）
+const AFFIXES = {
+  prefix: [
+    { id:'fierce',  name:'兇猛的',  stat:'atk',  val:4,  rare:1 },
+    { id:'sturdy',  name:'堅固的',  stat:'def',  val:4,  rare:1 },
+    { id:'arcane',  name:'奧術的',  stat:'matk', val:4,  rare:1 },
+    { id:'swift',   name:'迅捷的',  stat:'spd',  val:3,  rare:1 },
+    { id:'iron',    name:'鐵壁的',  stat:'def',  val:7,  rare:2 },
+    { id:'blazing', name:'灼燃的',  stat:'matk', val:8,  rare:2 },
+    { id:'brutal',  name:'殘暴的',  stat:'atk',  val:8,  rare:2 },
+    { id:'heroic',  name:'英雄的',  stat:'atk',  val:14, rare:3 },
+    { id:'divine',  name:'神聖的',  stat:'matk', val:14, rare:3 },
+    { id:'aegis',   name:'神盾的',  stat:'def',  val:12, rare:3 },
+  ],
+  suffix: [
+    { id:'of_bear',    name:'of 熊',   stat:'maxHp', val:20,  rare:1 },
+    { id:'of_fox',     name:'of 狐',   stat:'spd',   val:3,   rare:1 },
+    { id:'of_owl',     name:'of 梟',   stat:'mdef',  val:4,   rare:1 },
+    { id:'of_wolf',    name:'of 狼',   stat:'atk',   val:5,   rare:2 },
+    { id:'of_dragon',  name:'of 龍',   stat:'matk',  val:9,   rare:2 },
+    { id:'of_giant',   name:'of 巨人', stat:'maxHp', val:45,  rare:3 },
+    { id:'of_phoenix', name:'of 鳳',   stat:'matk',  val:12,  rare:3 },
+  ],
+};
+
+// 裝備基底定義
+// slots: weapon / armor / accessory
+const EQUIP_BASE = {
+  // 武器
+  w_short:  { id:'w_short',  slot:'weapon',    name:'短劍',   icon:'🗡️',  desc:'入門武器',       jobs:['warrior','archer'], buyPrice:80,  stats:{ atk:5 } },
+  w_staff:  { id:'w_staff',  slot:'weapon',    name:'木法杖', icon:'🪄',  desc:'魔法入門用杖',   jobs:['mage','priest'],    buyPrice:80,  stats:{ matk:5 } },
+  w_long:   { id:'w_long',   slot:'weapon',    name:'長劍',   icon:'⚔️',  desc:'劍士標配長劍',   jobs:['warrior'],          buyPrice:160, stats:{ atk:10 } },
+  w_bow:    { id:'w_bow',    slot:'weapon',    name:'獵弓',   icon:'🏹',  desc:'遠程主力武器',   jobs:['archer'],           buyPrice:160, stats:{ atk:7, spd:3 } },
+  w_tome:   { id:'w_tome',   slot:'weapon',    name:'古魔典', icon:'📖',  desc:'強力魔法書',     jobs:['mage'],             buyPrice:160, stats:{ matk:12 } },
+  w_mace:   { id:'w_mace',   slot:'weapon',    name:'神聖錘', icon:'🔨',  desc:'僧侶專用聖錘',   jobs:['priest'],           buyPrice:160, stats:{ matk:9, mdef:3 } },
+  // 防具
+  a_cloth:  { id:'a_cloth',  slot:'armor',     name:'布衣',   icon:'👘',  desc:'輕量布製護甲',   jobs:null,                 buyPrice:70,  stats:{ def:4 } },
+  a_leather:{ id:'a_leather',slot:'armor',     name:'皮甲',   icon:'🥋',  desc:'標準皮製護甲',   jobs:['warrior','archer'], buyPrice:130, stats:{ def:8 } },
+  a_robe:   { id:'a_robe',   slot:'armor',     name:'魔法袍', icon:'🥻',  desc:'魔法師護甲',     jobs:['mage','priest'],    buyPrice:130, stats:{ def:4, mdef:6 } },
+  a_plate:  { id:'a_plate',  slot:'armor',     name:'板甲',   icon:'🛡️',  desc:'重型板甲',       jobs:['warrior'],          buyPrice:220, stats:{ def:16, spd:-2 } },
+  a_chain:  { id:'a_chain',  slot:'armor',     name:'鎖甲',   icon:'⛓️',  desc:'機動鎖鏈甲',     jobs:['archer','warrior'], buyPrice:200, stats:{ def:12 } },
+  a_silk:   { id:'a_silk',   slot:'armor',     name:'精靈絲袍',icon:'✨', desc:'輕盈魔法護甲',   jobs:['mage','priest'],    buyPrice:220, stats:{ def:7, mdef:10, maxMp:15 } },
+  // 飾品
+  r_amulet: { id:'r_amulet', slot:'accessory', name:'護身符', icon:'📿',  desc:'基本護身符',     jobs:null,                 buyPrice:90,  stats:{ maxHp:15 } },
+  r_ring:   { id:'r_ring',   slot:'accessory', name:'力量戒指',icon:'💍', desc:'提升物理能力',   jobs:null,                 buyPrice:100, stats:{ atk:3, def:3 } },
+  r_gem:    { id:'r_gem',    slot:'accessory', name:'魔力寶珠',icon:'🔮', desc:'提升魔法能力',   jobs:null,                 buyPrice:100, stats:{ matk:4, maxMp:10 } },
+  r_cloak:  { id:'r_cloak',  slot:'accessory', name:'影隱披風',icon:'🦇', desc:'提升速度與防魔', jobs:null,                 buyPrice:150, stats:{ spd:5, mdef:5 } },
+  r_crown:  { id:'r_crown',  slot:'accessory', name:'智慧王冠',icon:'👑', desc:'全屬性強化',     jobs:null,                 buyPrice:250, stats:{ atk:3, matk:3, def:3, mdef:3 } },
+};
+
+// 套裝定義（穿齊觸發額外效果）
+const SET_BONUSES = {
+  warrior_set: {
+    name:'鐵血戰士套裝',
+    pieces: ['w_long', 'a_plate', 'r_ring'],
+    bonus: { atk:8, def:6, maxHp:30 },
+    desc:'ATK+8 / DEF+6 / MaxHP+30',
+  },
+  mage_set: {
+    name:'奧術法師套裝',
+    pieces: ['w_tome', 'a_silk', 'r_gem'],
+    bonus: { matk:10, mdef:8, maxMp:30 },
+    desc:'MATK+10 / MDEF+8 / MaxMP+30',
+  },
+  archer_set: {
+    name:'疾風弓手套裝',
+    pieces: ['w_bow', 'a_chain', 'r_cloak'],
+    bonus: { atk:6, spd:8, mdef:4 },
+    desc:'ATK+6 / SPD+8 / MDEF+4',
+  },
+  priest_set: {
+    name:'聖光僧侶套裝',
+    pieces: ['w_mace', 'a_silk', 'r_amulet'],
+    bonus: { matk:6, mdef:8, maxHp:25, maxMp:20 },
+    desc:'MATK+6 / MDEF+8 / MaxHP+25 / MaxMP+20',
+  },
+};
+
+// 商店每次刷新可購買的裝備池（按難度分層）
+const EQUIP_SHOP_POOL = {
+  tier1: ['w_short','w_staff','a_cloth','r_amulet'],
+  tier2: ['w_long','w_bow','w_tome','w_mace','a_leather','a_robe','r_ring','r_gem'],
+  tier3: ['a_plate','a_chain','a_silk','r_cloak','r_crown'],
+};
