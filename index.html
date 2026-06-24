@@ -175,6 +175,7 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
     </div>
     <div class="panel"><div class="panel-title">◆ 背包 <span class="dim" style="font-size:10px;" id="bag-cap-label"></span></div><div id="tavern-bag"></div></div>
     <div class="panel"><div class="panel-title">◆ 任　務</div><div id="tavern-quests"></div></div>
+    <div class="panel"><div class="panel-title">◆ 酒館人物</div><div id="tavern-npcs"></div></div>
     <div class="text-center mt16">
       <button class="btn btn-wide btn-sm" onclick="saveGame()"><div class="btn-inner">存　檔</div></button>
       <button class="btn btn-wide btn-sm mt8" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
@@ -304,6 +305,30 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
     <div id="merchant-items"></div>
     <div style="text-align:center;margin-top:8px;">
       <button class="btn btn-sm" style="width:140px;" onclick="closeOverlay('merchant-overlay');resumeBattle()"><div class="btn-inner">離　開</div></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- NPC 對話 overlay -->
+
+<div id="npc-overlay" class="overlay">
+  <div class="skill-box" style="width:320px;">
+    <div class="skill-box-title" id="npc-name">NPC</div>
+    <div id="npc-greeting" style="color:#c8d8a0;font-size:13px;line-height:1.8;margin:10px 0 14px;border-left:2px solid rgba(200,160,80,.4);padding-left:10px;"></div>
+    <div id="npc-options"></div>
+    <div id="npc-reply-area" style="display:none;">
+      <div style="color:#8a7a5a;font-size:11px;margin-bottom:4px;">你說：</div>
+      <div id="npc-player-line" style="color:#c8a96e;font-size:12px;font-style:italic;margin-bottom:10px;"></div>
+      <div style="color:#8a7a5a;font-size:11px;margin-bottom:4px;">對方：</div>
+      <div id="npc-reply-text" style="color:#c8d8a0;font-size:13px;line-height:1.8;border-left:2px solid rgba(200,160,80,.4);padding-left:10px;"></div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="btn btn-sm" style="width:140px;" onclick="currentNpcDialogue && (document.getElementById('npc-options').style.display='', document.getElementById('npc-reply-area').style.display='none')"><div class="btn-inner">繼續對話</div></button>
+        <button class="btn btn-sm" style="width:140px;margin-top:6px;" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
+      </div>
+    </div>
+    <div id="npc-close-btn" style="text-align:center;margin-top:8px;display:block;">
+      <button class="btn btn-sm" style="width:140px;" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
     </div>
   </div>
 </div>
