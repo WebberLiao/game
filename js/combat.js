@@ -338,6 +338,18 @@ if (def && e.type === def.target && q.progress < def.need) q.progress++;
 const drops = ['hp_pot', 'mp_pot', null, null, null];
 const drop = drops[Math.floor(Math.random() * drops.length)];
 if (drop && G.bag.length < G.bagMax) { G.bag.push(drop); addLog(`💎 掉落：${ITEMS_DEF[drop].name}`, 'heal'); }
+// 裝備掉落：Boss 必掉，一般敵人 15% 機率
+const equipRoll = Math.random();
+const isBoss = e.boss === true;
+if ((isBoss || equipRoll < 0.15) && G.bag.length < G.bagMax) {
+  const eqItem = rollEquipDrop(combat.mapId);
+  if (eqItem) {
+    G.bag.push(eqItem);
+    const rarityNames = ['', '✦ 魔法', '✦✦ 稀有', '✦✦✦ 史詩'];
+    const tag = rarityNames[eqItem.rarity] || '';
+    addLog(`🎁 ${tag ? tag + ' ' : ''}裝備掉落：${eqItem.fullName}`, 'heal');
+  }
+}
 checkLevelUp();
 combat.floor++;
 setTimeout(() => {
