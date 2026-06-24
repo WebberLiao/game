@@ -10,6 +10,7 @@ allDice: JSON.parse(JSON.stringify(job.dice)),
 equippedDice: [0, 1, 2],
 skills: [...job.startSkills],
 quests: [], bag: [], bagMax: 2, clearedMaps: [],
+equips: { weapon:null, armor:null, accessory:null },
 };
 }
 
@@ -61,6 +62,7 @@ if (!data.job || !data.stats) { toast('存檔格式錯誤'); return; }
 if (!data.allDice)      data.allDice = data.dice || [];
 if (!data.equippedDice) data.equippedDice = [0, 1, 2];
 if (!data.clearedMaps)  data.clearedMaps = [];
+if (!data.equips)       data.equips = { weapon:null, armor:null, accessory:null };
 localStorage.setItem('diceRPG_save', JSON.stringify(data));
 G = data;
 updateMainMenu();
@@ -89,4 +91,117 @@ function addToBag(id) {
 if (G.bag.length >= G.bagMax) { toast('背包已滿！'); return false; }
 G.bag.push(id);
 return true;
+}
+// ══════════ 裝備系統 ══════════
+function buildEquipItem(baseId, affixIds) {
+  const base = EQUIP_BASE[baseId];
+  if (!base) return null;
+  const item = JSON.parse(JSON.stringify(base));
+  item.uid = Date.now() + Math.random().toString(36).slice(2);
+  item.affixes = [];
+  (affixIds || []).forEach(aid => {
+    const pool = [...AFFIXES.prefix, ...AFFIXES.suffix];
+    const found = pool.find(a => a.id === aid);
+    if (found) item.affixes.push(found);
+  });
+  // 產生完整名稱
+  const pre  = item.affixes.find(a => AFFIXES.prefix.some(p => p.id === a.id));
+  const suf  = item.affixes.find(a => AFFIXES.suffix.some(s => s.id === a.id));
+  item.fullName = (pre ? pre.name : '') + item.name + (suf ? ' ' + suf.name : '');
+  item.rarity   = Math.max(0, ...item.affixes.map(a => a.rare || 0));
+  return item;
+}
+
+function rollEquipDrop(mapId) {
+  // 依地圖決定品質
+  const tierMap = { village:1, plains:1, ruins:2, cave:2, swamp:3 };
+  const tier = tierMap[mapId] || 1;
+  const allBase = Object.values(EQUIP_BASE);
+  const pool = allBase.filter(b => {
+    if (tier === 1) return ['w_short','w_staff','a_cloth','r_amulet'].includes(b.id);
+    if (tier === 2) return !['w_short','w_staff','a_cloth','r_amulet','a_plate','a_chain','a_silk','r_cloak','r_crown'].includes(b.id);
+    return true;
+  });
+  const base = pool[Math.floor(Math.random() * pool.length)];
+  // 機率決定詞綴數量
+  const r = Math.random();
+  let affixCount = 0;
+  if (r < 0.25) affixCount = 1;      // 25% 一個詞綴
+  if (r < 0.08) affixCount = 2;      // 8% 兩個詞綴
+  const affixIds = [];
+  if (affixCount > 0) {
+    const pre = AFFIXES.prefix.filter(a => a.rare <= tier);
+    affixIds.push(pre[Math.floor(Math.random() * pre.length)].id);
+  }
+  if (affixCount > 1) {
+    const suf = AFFIXES.suffix.filter(a => a.rare <= tier);
+    affixIds.push(suf[Math.floor(Math.random() * suf.length)].id);
+  }
+  return buildEquipItem(base.id, affixIds);
+}
+
+function calcEquipStats() {
+  // 回傳所有裝備提供的加成總和 (flat object)
+  const bonus = {};
+  if (!G.equips) return bonus;
+  Object.values(G.equips).forEach(eq => {
+    if (!eq) return;
+    const merge = (s) => {
+      Object.entries(s).forEach(([k,v]) => { bonus[k] = (bonus[k]||0) + v; });
+    };
+    merge(eq.stats || {});
+    (eq.affixes || []).forEach(a => { bonus[a.stat] = (bonus[a.stat]||0) + a.val; });
+  });
+  // 套裝加成
+  Object.values(SET_BONUSES).forEach(set => {
+    const worn = set.pieces.filter(p =>
+      Object.values(G.equips).some(eq => eq && eq.id === p)
+    );
+    if (worn.length === set.pieces.length) {
+      Object.entries(set.bonus).forEach(([k,v]) => { bonus[k] = (bonus[k]||0) + v; });
+    }
+  });
+  return bonus;
+}
+
+function getEffectiveStat(stat) {
+  const base = G.stats[stat] || 0;
+  const bonus = calcEquipStats();
+  return base + (bonus[stat] || 0);
+}
+
+function equipItem(eq) {
+  if (!G.equips) G.equips = { weapon:null, armor:null, accessory:null };
+  const slot = eq.slot;
+  // 職業限制
+  if (eq.jobs && !eq.jobs.includes(G.job)) {
+    toast('此裝備不適合你的職業'); return false;
+  }
+  G.equips[slot] = eq;
+  // 移出背包（裝備直接從背包裝上）
+  const idx = G.bag.findIndex(b => b && b.uid === eq.uid);
+  if (idx !== -1) G.bag.splice(idx, 1);
+  toast(eq.fullName + ' 已裝備');
+  return true;
+}
+
+function unequipItem(slot) {
+  if (!G.equips || !G.equips[slot]) return;
+  const eq = G.equips[slot];
+  if (G.bag.length >= G.bagMax) { toast('背包已滿，無法卸下'); return; }
+  G.bag.push(eq);
+  G.equips[slot] = null;
+  toast(eq.fullName + ' 已卸下');
+}
+
+function buyEquip(baseId) {
+  const base = EQUIP_BASE[baseId];
+  if (!base) return;
+  if (G.gold < base.buyPrice) { toast('金幣不足'); return; }
+  const item = buildEquipItem(baseId, []);
+  if (G.bag.length >= G.bagMax) { toast('背包已滿'); return; }
+  G.gold -= base.buyPrice;
+  G.bag.push(item);
+  toast('購入 ' + item.fullName);
+  renderShop();
 }
