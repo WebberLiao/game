@@ -51,6 +51,7 @@ const r = Math.random();
 if (r < 0.10) { showMerchantEvent(); return; }
 if (r < 0.15) { showChestEvent();   return; }
 if (r < 0.20) { showTrapEvent();    return; }
+if (r < 0.30) { showRoadNpcEvent(); return; }
 }
 startBattle();
 }
@@ -419,4 +420,32 @@ document.getElementById('battle-area').style.display = '';
 combat.floor++;
 if (combat.floor > combat.maxFloor) endAdventure();
 else startBattle();
+}
+// ══════════ 路上 NPC 事件 ══════════
+function showRoadNpcEvent() {
+  // 依據等級篩選可出現的 NPC
+  const available = NPCS.road.filter(npc => {
+    const d = npc.dialogues.find(d => d.condition(G));
+    return !!d;
+  });
+  if (!available.length) { startBattle(); return; }
+
+  const npc = available[Math.floor(Math.random() * available.length)];
+
+  document.getElementById('battle-area').style.display = 'none';
+  document.getElementById('event-area').innerHTML = `
+    <div class="event-box">
+      <div class="event-title">${npc.icon} 路上的相遇</div>
+      <div style="color:#8a7a5a;font-size:12px;margin:6px 0 14px;">${npc.name}</div>
+      <button class="btn btn-wide btn-sm" onclick="openRoadNpc('${npc.id}')">
+        <div class="btn-inner">上前搭話</div>
+      </button>
+      <button class="btn btn-wide btn-sm mt8" onclick="resumeBattle()">
+        <div class="btn-inner">繼續前進</div>
+      </button>
+    </div>`;
+}
+
+function openRoadNpc(npcId) {
+  openNpcDialogue(npcId, NPCS.road);
 }
