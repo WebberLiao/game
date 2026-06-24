@@ -44,6 +44,16 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
 .pip.off{background:rgba(255,255,255,.06);}
 .die-label-text{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;letter-spacing:1px;opacity:.7;font-family:monospace;}
 .die.atk .die-label-text{color:#e08080;}.die.def .die-label-text{color:#80a8e0;}.die.sp .die-label-text{color:#c080e0;}.die.matk .die-label-text{color:#40c8a0;}.die.none .die-label-text{color:#666;}.die.poison .die-label-text{color:#80c030;}
+.equip-card{display:flex;align-items:center;gap:10px;background:rgba(20,15,8,.9);border:1px solid rgba(200,160,80,.2);border-radius:4px;padding:10px;margin:6px 0;cursor:default;}
+.equip-card.equip-locked{opacity:.45;}
+.equip-name{font-size:12px;color:#e8d5a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.equip-stat{font-size:10px;color:#8a7a5a;margin-top:2px;letter-spacing:1px;}
+.equip-slot-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(200,160,80,.1);}
+.equip-slot-row:last-child{border-bottom:none;}
+.shop-tab-row{display:flex;gap:0;margin-bottom:12px;}
+.shop-tab{flex:1;padding:8px 0;text-align:center;font-size:12px;letter-spacing:2px;color:#8a7a5a;background:rgba(10,8,4,.8);border:1px solid rgba(200,160,80,.15);cursor:pointer;transition:.2s;}
+.shop-tab.active{color:#f0d080;background:rgba(40,28,8,.9);border-color:rgba(200,160,80,.45);}
+.rarity-0{color:#8a7a5a;}.rarity-1{color:#60c060;}.rarity-2{color:#4090e0;}.rarity-3{color:#c060e0;}
 .bar-row{margin:6px 0;}.bar-label{font-size:11px;color:#8a7a5a;margin-bottom:3px;}
 .bar-bg{background:rgba(255,255,255,.1);border-radius:4px;height:10px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:4px;transition:width .4s;}
@@ -176,6 +186,7 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
     <div class="panel"><div class="panel-title">◆ 背包 <span class="dim" style="font-size:10px;" id="bag-cap-label"></span></div><div id="tavern-bag"></div></div>
     <div class="panel"><div class="panel-title">◆ 任　務</div><div id="tavern-quests"></div></div>
     <div class="panel"><div class="panel-title">◆ 酒館人物</div><div id="tavern-npcs"></div></div>
+    <div class="panel"><div class="panel-title">◆ 已裝備</div><div id="equip-slots-shop"></div></div>
     <div class="text-center mt16">
       <button class="btn btn-wide btn-sm" onclick="saveGame()"><div class="btn-inner">存　檔</div></button>
       <button class="btn btn-wide btn-sm mt8" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
@@ -210,8 +221,20 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
 <div id="screen-shop" class="screen">
   <div class="topbar"><div class="topbar-title">商　店</div><div class="gold-display">💰 <span id="shop-gold">0</span></div></div>
   <div class="scroll-area">
-    <div class="panel"><div class="panel-title">◆ 購買</div><div id="shop-buy"></div></div>
-    <div class="panel"><div class="panel-title">◆ 背包（點選販售）<span class="dim" style="font-size:10px;" id="shop-bag-cap"></span></div><div id="shop-bag"></div></div>
+    <div class="panel">
+      <div class="shop-tab-row">
+        <div class="shop-tab active" id="tab-item" onclick="switchShopTab('item')">消耗品</div>
+        <div class="shop-tab" id="tab-equip" onclick="switchShopTab('equip')">裝備</div>
+        <div class="shop-tab" id="tab-bag" onclick="switchShopTab('bag')">背包<span class="dim" style="font-size:10px;" id="shop-bag-cap"></span></div>
+      </div>
+      <div id="shop-pane-item"><div id="shop-buy"></div></div>
+      <div id="shop-pane-equip" style="display:none;"><div id="shop-equip-buy"></div></div>
+      <div id="shop-pane-bag" style="display:none;"><div id="shop-bag"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">◆ 已裝備</div>
+      <div id="equip-slots-shop"></div>
+    </div>
     <div class="text-center mt16"><button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button></div>
   </div>
 </div>
