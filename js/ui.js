@@ -85,6 +85,7 @@ document.getElementById('bag-cap-label').textContent = `${G.bag.length}/${G.bagM
 renderBagDisplay('tavern-bag', false);
 renderQuestsPanel();
   renderTavernNpcs();
+  renderEquipSlots('equip-slots-shop');
 }
 
 // ── 骰子選擇 ──
@@ -200,6 +201,13 @@ el.appendChild(grid);
 function renderShop() {
 document.getElementById('shop-gold').textContent = G.gold;
 document.getElementById('shop-bag-cap').textContent = ` ${G.bag.length}/${G.bagMax}`;
+renderShopItems();
+renderShopEquips();
+renderBagDisplay('shop-bag', true);
+renderEquipSlots('equip-slots-shop');
+}
+
+function renderShopItems() {
 const buyEl = document.getElementById('shop-buy');
 const grid = document.createElement('div');
 grid.className = 'item-grid';
@@ -212,7 +220,94 @@ grid.appendChild(card);
 });
 buyEl.innerHTML = '';
 buyEl.appendChild(grid);
-renderBagDisplay('shop-bag', true);
+}
+
+function renderShopEquips() {
+const el = document.getElementById('shop-equip-buy');
+if (!el) return;
+el.innerHTML = '';
+const job = G.job;
+// 全部基底裝備按 slot 分組顯示
+const slotOrder = ['weapon','armor','accessory'];
+const slotLabel = { weapon:'武器', armor:'防具', accessory:'飾品' };
+slotOrder.forEach(slot => {
+const items = Object.values(EQUIP_BASE).filter(b => b.slot === slot);
+const section = document.createElement('div');
+section.style.marginBottom = '8px';
+section.innerHTML = `<div style="font-size:11px;color:#8a7a5a;letter-spacing:2px;margin-bottom:6px;">── ${slotLabel[slot]} ──</div>`;
+items.forEach(base => {
+const locked = base.jobs && !base.jobs.includes(job);
+const card = document.createElement('div');
+card.className = 'equip-card' + (locked ? ' equip-locked' : '');
+const statsStr = Object.entries(base.stats).map(([k,v]) => `${k.toUpperCase()}${v>0?'+':''}${v}`).join(' ');
+card.innerHTML = `<span style="font-size:18px;">${base.icon}</span>
+<div style="flex:1;min-width:0;">
+  <div class="equip-name">${base.name}${locked ? ' <span style="color:#555;font-size:10px;">（職業限制）</span>' : ''}</div>
+  <div class="equip-stat">${statsStr}</div>
+</div>
+<div style="text-align:right;white-space:nowrap;">
+  <div style="color:#f0d080;font-size:12px;">💰${base.buyPrice}</div>
+  ${locked ? '' : `<button class="btn btn-sm" style="width:60px;margin-top:4px;" onclick="buyEquip('${base.id}')"><div class="btn-inner">購買</div></button>`}
+</div>`;
+section.appendChild(card);
+});
+el.appendChild(section);
+});
+}
+
+function renderEquipSlots(containerId) {
+const el = document.getElementById(containerId);
+if (!el || !G) return;
+if (!G.equips) G.equips = { weapon:null, armor:null, accessory:null };
+const slotIcon = { weapon:'⚔️', armor:'🛡️', accessory:'📿' };
+const slotLabel = { weapon:'武器欄', armor:'防具欄', accessory:'飾品欄' };
+const bonus = calcEquipStats();
+// 套裝檢測
+const activeSets = Object.entries(SET_BONUSES).filter(([,set]) =>
+set.pieces.every(p => Object.values(G.equips).some(eq => eq && eq.id === p))
+).map(([,set]) => set);
+
+el.innerHTML = '';
+// 裝備欄位
+Object.keys(slotLabel).forEach(slot => {
+const eq = G.equips[slot];
+const row = document.createElement('div');
+row.className = 'equip-slot-row';
+if (eq) {
+const statsStr = (() => {
+const s = { ...eq.stats };
+(eq.affixes||[]).forEach(a => { s[a.stat] = (s[a.stat]||0) + a.val; });
+return Object.entries(s).map(([k,v]) => `${k.toUpperCase()}${v>0?'+':''}${v}`).join(' ');
+})();
+const rarityColor = ['#8a7a5a','#60c060','#4090e0','#c060e0'][eq.rarity] || '#8a7a5a';
+row.innerHTML = `<span style="font-size:16px;">${eq.icon}</span>
+<div style="flex:1;min-width:0;">
+  <div style="font-size:12px;color:${rarityColor};">${eq.fullName}</div>
+  <div class="equip-stat">${statsStr}</div>
+</div>
+<button class="btn btn-sm" style="width:52px;" onclick="unequipItem('${slot}');renderShop();renderTavern();"><div class="btn-inner">卸下</div></button>`;
+} else {
+row.innerHTML = `<span style="font-size:16px;opacity:.3;">${slotIcon[slot]}</span>
+<div style="flex:1;color:#555;font-size:12px;letter-spacing:2px;">${slotLabel[slot]}（空）</div>`;
+}
+el.appendChild(row);
+});
+
+// 裝備總加成
+if (Object.keys(bonus).length > 0) {
+const bonusDiv = document.createElement('div');
+bonusDiv.style.cssText = 'margin-top:10px;padding-top:8px;border-top:1px solid rgba(200,160,80,.15);font-size:11px;color:#8a7a5a;';
+bonusDiv.textContent = '裝備加成：' + Object.entries(bonus).filter(([,v])=>v!==0).map(([k,v])=>`${k.toUpperCase()}${v>0?'+':''}${v}`).join(' / ');
+el.appendChild(bonusDiv);
+}
+
+// 套裝加成顯示
+activeSets.forEach(set => {
+const setDiv = document.createElement('div');
+setDiv.style.cssText = 'margin-top:6px;font-size:11px;color:#f0d080;';
+setDiv.textContent = '✦ ' + set.name + '：' + set.desc;
+el.appendChild(setDiv);
+});
 }
 
 function buyItem(id) {
@@ -225,10 +320,27 @@ renderShop();
 }
 
 function sellItem(idx) {
-const def = ITEMS_DEF[G.bag[idx]];
+const entry = G.bag[idx];
+if (typeof entry === 'string') {
+const def = ITEMS_DEF[entry];
+if (!def) return;
 G.gold += def.sellPrice;
 G.bag.splice(idx, 1);
 toast(`賣出 ${def.name}，獲得 ${def.sellPrice} 金`);
+} else {
+sellEquip(idx);
+return;
+}
+renderShop();
+}
+
+function sellEquip(idx) {
+const eq = G.bag[idx];
+if (!eq || !eq.slot) return;
+const price = Math.floor((eq.buyPrice || 50) * 0.4);
+G.gold += price;
+G.bag.splice(idx, 1);
+toast(`賣出 ${eq.fullName}，獲得 ${price} 金`);
 renderShop();
 }
 
@@ -484,5 +596,13 @@ function renderTavernNpcs() {
       </div>`;
     card.onclick = () => openNpcDialogue(npc.id, NPCS.tavern);
     el.appendChild(card);
+  });
+}
+
+// ══════════ 商店頁籤切換 ══════════
+function switchShopTab(tab) {
+  ['item','equip','bag'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('shop-pane-' + t).style.display = t === tab ? '' : 'none';
   });
 }
