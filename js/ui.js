@@ -84,6 +84,7 @@ renderDiceSelect();
 document.getElementById('bag-cap-label').textContent = `${G.bag.length}/${G.bagMax}`;
 renderBagDisplay('tavern-bag', false);
 renderQuestsPanel();
+  renderTavernNpcs();
 }
 
 // ── 骰子選擇 ──
@@ -414,4 +415,74 @@ div.onclick = null;
 el.appendChild(div);
 });
 document.getElementById('merchant-overlay').classList.add('show');
+}
+// ══════════ NPC 對話系統 ══════════
+let currentNpcDialogue = null;
+
+function getCurrentDialogue(npc) {
+  for (const d of npc.dialogues) {
+    if (d.condition(G)) return d;
+  }
+  return npc.dialogues[npc.dialogues.length - 1];
+}
+
+function openNpcDialogue(npcId, npcList) {
+  const npc = npcList.find(n => n.id === npcId);
+  if (!npc) return;
+  const dialogue = getCurrentDialogue(npc);
+  currentNpcDialogue = { npc, dialogue };
+
+  const box = document.getElementById('npc-overlay');
+  document.getElementById('npc-name').textContent = npc.icon + ' ' + npc.name;
+  document.getElementById('npc-greeting').textContent = dialogue.greeting;
+
+  const opts = document.getElementById('npc-options');
+  opts.innerHTML = '';
+  dialogue.options.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'skill-option';
+    btn.innerHTML = `<div class="skill-option-name" style="color:#c8a96e;">${opt.text}</div>`;
+    btn.onclick = () => showNpcReply(i);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('npc-reply-area').style.display = 'none';
+  document.getElementById('npc-options').style.display = '';
+  box.classList.add('show');
+}
+
+function showNpcReply(optIdx) {
+  const opt = currentNpcDialogue.dialogue.options[optIdx];
+  document.getElementById('npc-options').style.display = 'none';
+  document.getElementById('npc-close-btn').style.display = 'none';
+  const replyArea = document.getElementById('npc-reply-area');
+  document.getElementById('npc-player-line').textContent = opt.text;
+  document.getElementById('npc-reply-text').textContent = opt.reply;
+  replyArea.style.display = '';
+}
+
+function closeNpcDialogue() {
+  document.getElementById('npc-overlay').classList.remove('show');
+  currentNpcDialogue = null;
+}
+
+function renderTavernNpcs() {
+  const el = document.getElementById('tavern-npcs');
+  if (!el) return;
+  el.innerHTML = '';
+  NPCS.tavern.forEach(npc => {
+    const card = document.createElement('div');
+    card.className = 'skill-option';
+    card.style.display = 'flex';
+    card.style.alignItems = 'center';
+    card.style.gap = '10px';
+    card.innerHTML = `
+      <span style="font-size:24px;">${npc.icon}</span>
+      <div>
+        <div class="skill-option-name">${npc.name}</div>
+        <div class="skill-option-desc">${npc.desc}</div>
+      </div>`;
+    card.onclick = () => openNpcDialogue(npc.id, NPCS.tavern);
+    el.appendChild(card);
+  });
 }
