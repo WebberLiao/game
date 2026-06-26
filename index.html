@@ -132,18 +132,21 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
   <div class="dim" style="font-size:10px;letter-spacing:2px;padding-bottom:16px;">Ver. 0.6.0</div>
 </div>
 
-<!-- 職業選擇 -->
+<!-- 輸入名字 -->
 
-<div id="screen-jobselect" class="screen">
-  <div style="margin-top:20px;font-size:13px;letter-spacing:4px;color:#c8a96e;">選擇職業</div>
-  <div class="deco"></div>
-  <div class="job-grid">
-    <div class="job-card" onclick="selectJob('warrior')"><span class="job-icon">⚔️</span><div class="job-name">劍　士</div><div class="job-desc">近戰強攻<br>高物攻物防</div></div>
-    <div class="job-card" onclick="selectJob('mage')"><span class="job-icon">🔮</span><div class="job-name">法　師</div><div class="job-desc">魔法爆發<br>高魔攻低物防</div></div>
-    <div class="job-card" onclick="selectJob('archer')"><span class="job-icon">🏹</span><div class="job-name">弓　手</div><div class="job-desc">靈活迴避<br>均衡成長</div></div>
-    <div class="job-card" onclick="selectJob('priest')"><span class="job-icon">✨</span><div class="job-name">僧　侶</div><div class="job-desc">治癒輔助<br>高魔攻強回復</div></div>
+<div id="screen-nameentry" class="screen">
+  <div class="topbar"><div class="topbar-title">踏上旅途</div></div>
+  <div class="scroll-area" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-height:70vh;">
+    <div style="color:#8a7a5a;font-size:13px;letter-spacing:2px;text-align:center;line-height:2;">你的名字是？</div>
+    <input id="player-name-input" type="text" maxlength="12" placeholder="Player"
+      style="background:rgba(20,15,8,.9);border:1px solid rgba(200,160,80,.4);border-radius:4px;
+             color:#e8d5a3;font-size:18px;letter-spacing:4px;text-align:center;padding:12px 20px;
+             width:220px;outline:none;"
+      onkeydown="if(event.key==='Enter') confirmName()">
+    <div style="color:#555;font-size:11px;">最多 12 字，留空則使用 Player</div>
+    <button class="btn btn-wide" onclick="confirmName()"><div class="btn-inner">開始冒險</div></button>
+    <button class="btn btn-wide btn-sm" onclick="showScreen('screen-main')"><div class="btn-inner">返　回</div></button>
   </div>
-  <button class="btn btn-wide btn-sm mt16" onclick="showScreen('screen-main')"><div class="btn-inner">返　回</div></button>
 </div>
 
 <!-- 城鎮 -->
@@ -197,10 +200,22 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
 <!-- 兵營 -->
 
 <div id="screen-barracks" class="screen">
-  <div class="topbar"><div class="topbar-title">兵　營</div><div class="gold-display">💰 <span id="barracks-gold">0</span></div></div>
+  <div class="topbar"><div class="topbar-title">技能樹</div><div class="gold-display">💰 <span id="barracks-gold">0</span></div></div>
   <div class="scroll-area">
-    <div class="panel"><div class="panel-title">◆ 強化能力值（各 50 金）</div><div id="barracks-stats"></div></div>
-    <div class="panel"><div class="panel-title">◆ 技　能</div><div id="barracks-skills"></div></div>
+    <div class="panel" style="text-align:center;">
+      <div id="barracks-points" style="font-size:12px;color:#f0d080;letter-spacing:2px;min-height:16px;"></div>
+    </div>
+    <div class="panel" id="barracks-statpoints" style="display:none;">
+      <div class="panel-title">◆ 屬性點分配</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">◆ 裝備中的技能（最多 3 個）</div>
+      <div id="barracks-skill-slots"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">◆ 技能樹</div>
+      <div id="barracks-skills"></div>
+    </div>
     <div class="text-center mt16"><button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button></div>
   </div>
 </div>
@@ -353,6 +368,16 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
     <div id="npc-close-btn" style="text-align:center;margin-top:8px;display:block;">
       <button class="btn btn-sm" style="width:140px;" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
     </div>
+  </div>
+</div>
+
+<!-- 升級 Overlay -->
+<div id="levelup-overlay" class="overlay">
+  <div class="skill-box" style="width:300px;text-align:center;">
+    <div class="skill-box-title">🎉 升級！Lv.<span id="levelup-lv"></span></div>
+    <div id="levelup-statpoints" style="margin:10px 0;"></div>
+    <div id="levelup-skillpoints"></div>
+    <button class="btn btn-wide btn-sm" style="margin-top:12px;" onclick="closeOverlay('levelup-overlay');saveGame();renderBarracks();"><div class="btn-inner">確認</div></button>
   </div>
 </div>
 
