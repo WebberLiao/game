@@ -2,7 +2,6 @@
 let G = null;
 
 function newGame(jobId) {
-const job = JOBS[jobId];
 return {
 gold: 200, xp: 0, level: 1, job: jobId,
 stats: JSON.parse(JSON.stringify(job.stats)),
@@ -58,11 +57,16 @@ const reader = new FileReader();
 reader.onload = ev => {
 try {
 const data = JSON.parse(ev.target.result);
-if (!data.job || !data.stats) { toast('存檔格式錯誤'); return; }
+if (!data.stats) { toast('存檔格式錯誤'); return; }
 if (!data.allDice)      data.allDice = data.dice || [];
 if (!data.equippedDice) data.equippedDice = [0, 1, 2];
 if (!data.clearedMaps)  data.clearedMaps = [];
-if (!data.equips)       data.equips = { weapon:null, armor:null, accessory:null };
+if (!data.equips)        data.equips = { weapon:null, armor:null, accessory:null };
+if (!data.learnedSkills) data.learnedSkills = data.skills || [];
+if (!data.skills)        data.skills = [];
+if (data.statPoints  === undefined) data.statPoints  = 0;
+if (data.skillPoints === undefined) data.skillPoints = 0;
+if (!data.name)          data.name = 'Player';
 localStorage.setItem('diceRPG_save', JSON.stringify(data));
 G = data;
 updateMainMenu();
@@ -75,15 +79,65 @@ e.target.value = '';
 
 // ══════════ 升級 ══════════
 function checkLevelUp() {
-const needed = G.level * 30;
-if (G.xp >= needed) {
-G.xp -= needed;
-G.level++;
-G.stats.maxHp += 10; G.stats.hp = G.stats.maxHp;
-G.stats.maxMp += 5;  G.stats.mp = G.stats.maxMp;
-G.stats.atk += 2;    G.stats.def += 1;
-toast(`🎉 升級！Lv.${G.level}`);
+  const needed = G.level * 30;
+  if (G.xp >= needed) {
+    G.xp -= needed;
+    G.level++;
+    G.statPoints  += 2;  // 每級 2 屬性點
+    G.skillPoints += 1;  // 每級 1 技能點
+    toast('🎉 升級！Lv.' + G.level + '　獲得屬性點×2、技能點×1');
+    // 如果在城鎮/酒館就彈出分配畫面
+    if (document.getElementById('screen-barracks').classList.contains('active') ||
+        document.getElementById('screen-town').classList.contains('active')) {
+      showLevelUpOverlay();
+    }
+  }
 }
+
+function spendStatPoint(stat) {
+  if (!G.statPoints) { toast('沒有可用的屬性點'); return; }
+  const gains = { atk:2, def:2, matk:2, mdef:2, maxHp:15, maxMp:10, spd:2 };
+  const gain = gains[stat] || 1;
+  G.stats[stat] = (G.stats[stat] || 0) + gain;
+  if (stat === 'maxHp') { G.stats.hp = Math.min(G.stats.hp + gain, G.stats.maxHp); }
+  if (stat === 'maxMp') { G.stats.mp = Math.min(G.stats.mp + gain, G.stats.maxMp); }
+  G.statPoints--;
+  renderLevelUpOverlay();
+}
+
+function learnSkill(skillId) {
+  if (!G.skillPoints) { toast('沒有可用的技能點'); return; }
+  if (G.learnedSkills.includes(skillId)) { toast('已學過此技能'); return; }
+  // 確認前置條件
+  let prereqOk = true;
+  for (const branch of Object.values(SKILL_TREE)) {
+    const node = branch.nodes.find(n => n.id === skillId);
+    if (node && node.prereq && !G.learnedSkills.includes(node.prereq)) {
+      prereqOk = false; break;
+    }
+  }
+  if (!prereqOk) { toast('需要先學習前置技能'); return; }
+  G.learnedSkills.push(skillId);
+  G.skillPoints--;
+  // 自動裝備（slots 不滿時）
+  if (G.skills.length < 3) G.skills.push(skillId);
+  toast('✦ 學會：' + (SKILLS_DEF.find(s => s.id === skillId) || {}).name);
+  renderSkillTree();
+  renderBarracks();
+}
+
+function equipSkill(skillId) {
+  if (!G.learnedSkills.includes(skillId)) return;
+  if (G.skills.includes(skillId)) {
+    G.skills = G.skills.filter(s => s !== skillId);
+    toast('卸除技能');
+  } else {
+    if (G.skills.length >= 3) { toast('最多裝備 3 個技能，請先卸除一個'); return; }
+    G.skills.push(skillId);
+    toast('裝備技能');
+  }
+  renderSkillTree();
+  renderBarracks();
 }
 
 // ══════════ 背包 ══════════
@@ -173,10 +227,7 @@ function getEffectiveStat(stat) {
 function equipItem(eq) {
   if (!G.equips) G.equips = { weapon:null, armor:null, accessory:null };
   const slot = eq.slot;
-  // 職業限制
-  if (eq.jobs && !eq.jobs.includes(G.job)) {
-    toast('此裝備不適合你的職業'); return false;
-  }
+  // 無職業限制
   G.equips[slot] = eq;
   // 移出背包（裝備直接從背包裝上）
   const idx = G.bag.findIndex(b => b && b.uid === eq.uid);
