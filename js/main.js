@@ -12,14 +12,18 @@ if (id === 'screen-mapselect') renderMapSelect();
 
 // ══════════ 主選單 ══════════
 function startNew() {
-G = null;
-showScreen('screen-jobselect');
+  G = null;
+  showScreen('screen-nameentry');
+  document.getElementById('player-name-input').value = '';
+  document.getElementById('player-name-input').focus();
 }
 
-function selectJob(jobId) {
-G = newGame(jobId);
-saveGame();
-showScreen('screen-town');
+function confirmName() {
+  const input = document.getElementById('player-name-input');
+  const name = input.value.trim() || 'Player';
+  G = newGame(name);
+  saveGame();
+  showScreen('screen-town');
 }
 
 function continueGame() {
