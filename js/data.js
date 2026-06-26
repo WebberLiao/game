@@ -17,67 +17,62 @@ const PIP_LAYOUTS = {
 6:[[1,0,1],[1,0,1],[1,0,1]],
 };
 
-// ══════════ 職業 ══════════
-const JOBS = {
-warrior: {
-name:'劍士', icon:'⚔️',
-stats:{ hp:100,maxHp:100,mp:30,maxMp:30,atk:14,def:8,matk:4,mdef:4,spd:7 },
-dice:[
-{ faces:['atk','atk','def','def','sp','none'] },
-{ faces:['atk','atk','def','def','sp','none'] },
-{ faces:['atk','atk','def','def','sp','none'] },
-],
-startSkills:['slash'],
-},
-mage: {
-name:'法師', icon:'🔮',
-stats:{ hp:70,maxHp:70,mp:80,maxMp:80,atk:6,def:3,matk:16,mdef:8,spd:8 },
-dice:[
-{ faces:['atk','atk','matk','matk','sp','none'] },
-{ faces:['atk','atk','matk','matk','sp','none'] },
-{ faces:['atk','atk','matk','matk','sp','none'] },
-],
-startSkills:['fireball'],
-},
-archer: {
-name:'弓手', icon:'🏹',
-stats:{ hp:80,maxHp:80,mp:50,maxMp:50,atk:12,def:5,matk:8,mdef:6,spd:12 },
-dice:[
-{ faces:['atk','atk','matk','def','sp','none'] },
-{ faces:['atk','atk','matk','def','sp','none'] },
-{ faces:['atk','atk','matk','def','sp','none'] },
-],
-startSkills:['evade'],
-},
-priest: {
-name:'僧侶', icon:'✨',
-stats:{ hp:85,maxHp:85,mp:70,maxMp:70,atk:7,def:5,matk:13,mdef:10,spd:7 },
-dice:[
-{ faces:['atk','matk','matk','sp','sp','none'] },
-{ faces:['atk','matk','matk','sp','sp','none'] },
-{ faces:['atk','matk','matk','sp','sp','none'] },
-],
-startSkills:['heal'],
-},
+// ══════════ 初始骰子（無職業） ══════════
+const DEFAULT_DICE = [
+  { faces:['atk','atk','def','def','sp','none'] },
+  { faces:['atk','atk','def','def','sp','none'] },
+  { faces:['atk','atk','def','def','sp','none'] },
+];
+
+// ══════════ 技能樹 ══════════
+// branch: 'power'(力量) | 'magic'(魔法) | 'agile'(敏捷) | 'holy'(神聖)
+// prereq: 同分支前一技能 id（null = 根節點，任何人都能學）
+// req: 戰鬥中使用時所需骰面組合
+const SKILL_TREE = {
+  power: {
+    label: '⚔️ 力量', color: '#e07040',
+    nodes: [
+      { id:'slash',    name:'斬擊',    tier:1, prereq:null,      mpCost:0,  req:{atk:2},         desc:'物攻×2 → 強力一擊',           dmgMult:1.8, dmgStat:'atk',  effect:null       },
+      { id:'dslash',   name:'雙重斬',  tier:2, prereq:'slash',   mpCost:10, req:{atk:3},         desc:'物攻×3 → 穩定高傷',           dmgMult:2.2, dmgStat:'atk',  effect:null       },
+      { id:'counter',  name:'反擊姿態',tier:2, prereq:'slash',   mpCost:0,  req:{def:1,atk:1},   desc:'防禦×1+物攻×1 → 反彈30%傷害', dmgMult:0,   dmgStat:null,   effect:'counter'  },
+      { id:'berserker',name:'狂戰士',  tier:3, prereq:'dslash',  mpCost:15, req:{atk:4},         desc:'物攻×4 → 極限爆發',           dmgMult:3.0, dmgStat:'atk',  effect:null       },
+      { id:'warshout', name:'戰吼',    tier:3, prereq:'counter', mpCost:10, req:{atk:2,def:1},   desc:'攻擊+本回合物防+8',           dmgMult:1.2, dmgStat:'atk',  effect:'warshout' },
+    ],
+  },
+  magic: {
+    label: '🔮 魔法', color: '#6060e0',
+    nodes: [
+      { id:'fireball', name:'火球術',  tier:1, prereq:null,      mpCost:15, req:{matk:2},        desc:'魔攻×2 → 魔法強攻',           dmgMult:1.8, dmgStat:'matk', effect:null       },
+      { id:'burnball', name:'燃燒彈',  tier:2, prereq:'fireball',mpCost:20, req:{matk:1,sp:2},   desc:'魔攻×1+特殊×2 → 燃燒2回合',  dmgMult:1.0, dmgStat:'matk', effect:'burn'     },
+      { id:'stun',     name:'暈眩術',  tier:2, prereq:'fireball',mpCost:15, req:{matk:1,sp:1},   desc:'魔攻×1+特殊×1 → 敵人跳過',   dmgMult:0,   dmgStat:null,   effect:'stun'     },
+      { id:'arcane',   name:'秘術爆發',tier:3, prereq:'burnball',mpCost:25, req:{atk:1,sp:2},    desc:'攻×1+特殊×2 → 魔法大傷',     dmgMult:2.5, dmgStat:'matk', effect:null       },
+      { id:'blizzard', name:'冰暴',    tier:3, prereq:'stun',    mpCost:30, req:{matk:3},        desc:'魔攻×3 → 全面魔法打擊',       dmgMult:2.8, dmgStat:'matk', effect:null       },
+    ],
+  },
+  agile: {
+    label: '🏹 敏捷', color: '#40c080',
+    nodes: [
+      { id:'evade',    name:'必閃',    tier:1, prereq:null,      mpCost:10, req:{sp:1,def:1},    desc:'特殊×1+防禦×1 → 閃避下次攻擊',dmgMult:0,  dmgStat:null,   effect:'evade'    },
+      { id:'magarrow', name:'魔法箭',  tier:2, prereq:'evade',   mpCost:12, req:{matk:2},        desc:'魔攻×2 → 穿透魔攻',           dmgMult:1.8, dmgStat:'matk', effect:null       },
+      { id:'mp_fill',  name:'MP充填',  tier:2, prereq:'evade',   mpCost:0,  req:{sp:3},          desc:'特殊×3 → 回復 30 MP',         dmgMult:0,   dmgStat:null,   effect:'mpfill'   },
+      { id:'swiftkill',name:'疾風斬',  tier:3, prereq:'magarrow',mpCost:18, req:{atk:2,sp:1},   desc:'物攻×2+速度加成 → 高速攻擊',  dmgMult:2.0, dmgStat:'atk',  effect:'swift'    },
+      { id:'smokebomb',name:'煙霧彈',  tier:3, prereq:'mp_fill', mpCost:20, req:{sp:2,def:1},   desc:'特殊×2+防禦×1 → 回避+反擊',  dmgMult:0,   dmgStat:null,   effect:'smokebomb'},
+    ],
+  },
+  holy: {
+    label: '✨ 神聖', color: '#e0c040',
+    nodes: [
+      { id:'heal',      name:'治療',   tier:1, prereq:null,      mpCost:20, req:{sp:2},          desc:'特殊×2 → 回復 20HP+魔攻加成', dmgMult:0,   dmgStat:null,   effect:'heal'     },
+      { id:'regen',     name:'恢復術', tier:2, prereq:'heal',    mpCost:15, req:{sp:1,def:1},    desc:'特殊×1+防禦×1 → 回復部分HP', dmgMult:0,   dmgStat:null,   effect:'regen'    },
+      { id:'guard',     name:'鐵壁',   tier:2, prereq:'heal',    mpCost:0,  req:{def:2},         desc:'防禦×2 → 本回合傷害-60%',    dmgMult:0,   dmgStat:null,   effect:'shield'   },
+      { id:'holylight', name:'聖光術', tier:3, prereq:'regen',   mpCost:25, req:{matk:2,sp:1},  desc:'魔攻×2+特殊×1 → 大回復+解毒',dmgMult:0,   dmgStat:null,   effect:'holylight'},
+      { id:'sanctuary', name:'聖域',   tier:3, prereq:'guard',   mpCost:30, req:{def:2,sp:2},   desc:'防禦×2+特殊×2 → 一回合無敵', dmgMult:0,   dmgStat:null,   effect:'sanctuary'},
+    ],
+  },
 };
 
-// ══════════ 技能 ══════════
-const SKILLS_DEF = [
-{ id:'slash',     name:'斬擊',    jobs:['warrior'],        req:{atk:2},       mpCost:0,  desc:'物攻×2 → 強力一擊',              dmgMult:1.8, dmgStat:'atk',  effect:null },
-{ id:'dslash',    name:'雙重斬',  jobs:['warrior'],        req:{atk:3},       mpCost:10, desc:'物攻×3 → 穩定高傷',              dmgMult:2.2, dmgStat:'atk',  effect:null },
-{ id:'counter',   name:'反擊姿態',jobs:['warrior','archer'],req:{def:1,atk:1}, mpCost:0,  desc:'防禦×1+物攻×1 → 反彈30%傷害',   dmgMult:0,   dmgStat:null,   effect:'counter' },
-{ id:'guard',     name:'鐵壁',    jobs:null,               req:{def:2},       mpCost:0,  desc:'防禦×2 → 本回合傷害-60%',        dmgMult:0,   dmgStat:null,   effect:'shield' },
-{ id:'mp_fill',   name:'MP充填',  jobs:null,               req:{sp:3},        mpCost:0,  desc:'特殊×3 → 回復 30 MP',            dmgMult:0,   dmgStat:null,   effect:'mpfill' },
-{ id:'arcane',    name:'秘術爆發', jobs:['mage','priest'],  req:{atk:1,sp:2},  mpCost:20, desc:'攻×1+特殊×2 → 魔法大傷',         dmgMult:2.5, dmgStat:'matk', effect:null },
-{ id:'fireball',  name:'火球術',   jobs:['mage'],           req:{matk:2},      mpCost:15, desc:'魔攻×2 → 魔法強攻',              dmgMult:1.8, dmgStat:'matk', effect:null },
-{ id:'stun',      name:'暈眩術',   jobs:['mage'],           req:{matk:1,sp:1}, mpCost:15, desc:'魔攻×1+特殊×1 → 敵人下回合跳過', dmgMult:0,   dmgStat:null,   effect:'stun' },
-{ id:'burnball',  name:'燃燒彈',   jobs:['mage'],           req:{matk:1,sp:2}, mpCost:20, desc:'魔攻×1+特殊×2 → 攻擊+燃燒2回合', dmgMult:1.0, dmgStat:'matk', effect:'burn' },
-{ id:'magarrow',  name:'魔法箭',   jobs:['archer'],         req:{matk:2},      mpCost:12, desc:'魔攻×2 → 穿透魔攻',              dmgMult:1.8, dmgStat:'matk', effect:null },
-{ id:'evade',     name:'必閃',     jobs:['archer'],         req:{sp:1,def:1},  mpCost:10, desc:'特殊×1+防禦×1 → 閃避下次攻擊',  dmgMult:0,   dmgStat:null,   effect:'evade' },
-{ id:'heal',      name:'治療',     jobs:['priest'],         req:{sp:2},        mpCost:20, desc:'特殊×2 → 回復 20HP + 魔攻加成',  dmgMult:0,   dmgStat:null,   effect:'heal' },
-{ id:'holylight', name:'聖光術',   jobs:['priest'],         req:{matk:2,sp:1}, mpCost:25, desc:'魔攻×2+特殊×1 → 大回復+解除中毒',dmgMult:0,   dmgStat:null,   effect:'holylight' },
-{ id:'regen',     name:'恢復術',   jobs:null,               req:{sp:1,def:1},  mpCost:15, desc:'特殊×1+防禦×1 → 回復部分HP',    dmgMult:0,   dmgStat:null,   effect:'regen' },
-];
+// 扁平化查詢用
+const SKILLS_DEF = Object.values(SKILL_TREE).flatMap(b => b.nodes);
 
 // ══════════ 敵人 ══════════
 const ALL_ENEMIES = {
