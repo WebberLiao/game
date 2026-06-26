@@ -45,9 +45,9 @@ hasSave() ? btn.removeAttribute('disabled') : btn.setAttribute('disabled', '');
 
 // ══════════ 城鎮 ══════════
 function renderTown() {
-const job = JOBS[G.job];
-document.getElementById('town-gold').textContent = G.gold;
-document.getElementById('town-job-icon').textContent = job.icon;
+  document.getElementById('town-gold').textContent = G.gold;
+  const iconEl = document.getElementById('town-job-icon');
+  if (iconEl) iconEl.textContent = G.name ? G.name[0].toUpperCase() : '?';
 document.getElementById('town-job-name').textContent = job.name;
 }
 
@@ -78,8 +78,8 @@ el.appendChild(card);
 // ══════════ 酒館 ══════════
 function renderTavern() {
 document.getElementById('tavern-gold').textContent = G.gold;
-const s = G.stats, job = JOBS[G.job];
-document.getElementById('tavern-char-info').innerHTML = ` <div style="font-size:11px;color:#8a7a5a;letter-spacing:2px;margin-bottom:8px;">${job.icon} ${job.name}　Lv.${G.level}</div> <div class="bar-row"><div class="bar-label">HP ${s.hp}/${s.maxHp}</div><div class="bar-bg"><div class="bar-fill bar-hp" style="width:${s.hp / s.maxHp * 100}%"></div></div></div> <div class="bar-row"><div class="bar-label">MP ${s.mp}/${s.maxMp}</div><div class="bar-bg"><div class="bar-fill bar-mp" style="width:${s.mp / s.maxMp * 100}%"></div></div></div> <div class="stat-grid mt8"> <div class="stat-item"><span class="stat-label">物攻</span><span class="stat-val">${s.atk}</span></div> <div class="stat-item"><span class="stat-label">物防</span><span class="stat-val">${s.def}</span></div> <div class="stat-item"><span class="stat-label">魔攻</span><span class="stat-val">${s.matk}</span></div> <div class="stat-item"><span class="stat-label">魔防</span><span class="stat-val">${s.mdef}</span></div> <div class="stat-item"><span class="stat-label">速度</span><span class="stat-val">${s.spd}</span></div> <div class="stat-item"><span class="stat-label">XP</span><span class="stat-val">${G.xp}/${G.level * 30}</span></div> </div>`;
+const s = G.stats;
+document.getElementById('tavern-char-info').innerHTML = ` <div style="font-size:11px;color:#8a7a5a;letter-spacing:2px;margin-bottom:8px;">⚔ ${G.name || 'Player'}　Lv.${G.level}</div> <div class="bar-row"><div class="bar-label">HP ${s.hp}/${s.maxHp}</div><div class="bar-bg"><div class="bar-fill bar-hp" style="width:${s.hp / s.maxHp * 100}%"></div></div></div> <div class="bar-row"><div class="bar-label">MP ${s.mp}/${s.maxMp}</div><div class="bar-bg"><div class="bar-fill bar-mp" style="width:${s.mp / s.maxMp * 100}%"></div></div></div> <div class="stat-grid mt8"> <div class="stat-item"><span class="stat-label">物攻</span><span class="stat-val">${s.atk}</span></div> <div class="stat-item"><span class="stat-label">物防</span><span class="stat-val">${s.def}</span></div> <div class="stat-item"><span class="stat-label">魔攻</span><span class="stat-val">${s.matk}</span></div> <div class="stat-item"><span class="stat-label">魔防</span><span class="stat-val">${s.mdef}</span></div> <div class="stat-item"><span class="stat-label">速度</span><span class="stat-val">${s.spd}</span></div> <div class="stat-item"><span class="stat-label">XP</span><span class="stat-val">${G.xp}/${G.level * 30}</span></div> </div>`;
 renderDiceSelect();
 document.getElementById('bag-cap-label').textContent = `${G.bag.length}/${G.bagMax}`;
 renderBagDisplay('tavern-bag', false);
@@ -226,7 +226,6 @@ function renderShopEquips() {
 const el = document.getElementById('shop-equip-buy');
 if (!el) return;
 el.innerHTML = '';
-const job = G.job;
 // 全部基底裝備按 slot 分組顯示
 const slotOrder = ['weapon','armor','accessory'];
 const slotLabel = { weapon:'武器', armor:'防具', accessory:'飾品' };
@@ -236,18 +235,17 @@ const section = document.createElement('div');
 section.style.marginBottom = '8px';
 section.innerHTML = `<div style="font-size:11px;color:#8a7a5a;letter-spacing:2px;margin-bottom:6px;">── ${slotLabel[slot]} ──</div>`;
 items.forEach(base => {
-const locked = base.jobs && !base.jobs.includes(job);
 const card = document.createElement('div');
-card.className = 'equip-card' + (locked ? ' equip-locked' : '');
+card.className = 'equip-card';
 const statsStr = Object.entries(base.stats).map(([k,v]) => `${k.toUpperCase()}${v>0?'+':''}${v}`).join(' ');
 card.innerHTML = `<span style="font-size:18px;">${base.icon}</span>
 <div style="flex:1;min-width:0;">
-  <div class="equip-name">${base.name}${locked ? ' <span style="color:#555;font-size:10px;">（職業限制）</span>' : ''}</div>
+  <div class="equip-name">${base.name}</div>
   <div class="equip-stat">${statsStr}</div>
 </div>
 <div style="text-align:right;white-space:nowrap;">
   <div style="color:#f0d080;font-size:12px;">💰${base.buyPrice}</div>
-  ${locked ? '' : `<button class="btn btn-sm" style="width:60px;margin-top:4px;" onclick="buyEquip('${base.id}')"><div class="btn-inner">購買</div></button>`}
+  <button class="btn btn-sm" style="width:60px;margin-top:4px;" onclick="buyEquip('${base.id}')"><div class="btn-inner">購買</div></button>
 </div>`;
 section.appendChild(card);
 });
@@ -348,18 +346,130 @@ renderShop();
 const STAT_LABELS = { atk:'物攻', def:'物防', matk:'魔攻', mdef:'魔防', spd:'速度', hp:'最大HP', mp:'最大MP' };
 
 function renderBarracks() {
-document.getElementById('barracks-gold').textContent = G.gold;
-const s = G.stats;
-document.getElementById('barracks-stats').innerHTML = Object.keys(STAT_LABELS).map(k => ` <div class="upgrade-row"> <span style="font-size:13px;">${STAT_LABELS[k]} <span class="gold">${k === 'hp' ? s.maxHp : k === 'mp' ? s.maxMp : s[k]}</span></span> <span style="font-size:11px;color:#c8a96e;">50金</span> <button class="btn btn-sm" style="width:70px;" onclick="upgradeStat('${k}')"><div class="btn-inner">強化</div></button> </div>`).join('');
-const avail = SKILLS_DEF.filter(sk => sk.jobs === null || sk.jobs.includes(G.job));
-document.getElementById('barracks-skills').innerHTML = avail.map(sk => {
-const learned = G.skills.includes(sk.id);
-const badge = sk.jobs
-? `<span class="job-badge">${sk.jobs.map(j => JOBS[j].name).join('/')}</span>`
-: '<span class="job-badge">共用</span>';
-return `<div class="quest-item"> <div class="quest-name">${sk.name}${badge}${learned ? ' <span class="green">✓</span>' : ''}</div> <div class="quest-prog">${sk.desc}${sk.mpCost ? '　消耗' + sk.mpCost + 'MP' : ''}</div> ${!learned ? `<button class="btn btn-sm" style="width:100px;margin-top:6px;" onclick="learnSkill('${sk.id}')"><div class="btn-inner">學習 80金</div></button>` : ''} </div>`;
-}).join('');
+  document.getElementById('barracks-gold').textContent = G.gold;
+  // 顯示點數
+  const ptEl = document.getElementById('barracks-points');
+  if (ptEl) ptEl.textContent = (G.statPoints > 0 ? '屬性點：' + G.statPoints + '　' : '') +
+                                (G.skillPoints > 0 ? '技能點：' + G.skillPoints : '');
+
+  // 技能欄（已裝備）
+  const slotEl = document.getElementById('barracks-skill-slots');
+  if (slotEl) {
+    if (!G.skills.length) {
+      slotEl.innerHTML = '<div style="color:#555;font-size:12px;">未裝備任何技能</div>';
+    } else {
+      slotEl.innerHTML = G.skills.map((sid, i) => {
+        const sk = SKILLS_DEF.find(s => s.id === sid);
+        if (!sk) return '';
+        return `<div class="skill-option" style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="skill-option-name">${sk.name}</div>
+            <div class="skill-option-desc">${sk.desc}</div>
+          </div>
+          <button class="btn btn-sm" style="width:50px;" onclick="equipSkill('${sid}');"><div class="btn-inner">卸除</div></button>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  renderSkillTree();
+
+  // 屬性點分配
+  if (G.statPoints > 0) showStatPointPanel();
+  else {
+    const sp = document.getElementById('barracks-statpoints');
+    if (sp) sp.style.display = 'none';
+  }
 }
+
+function renderSkillTree() {
+  const el = document.getElementById('barracks-skills');
+  if (!el) return;
+  el.innerHTML = '';
+  Object.entries(SKILL_TREE).forEach(([branchId, branch]) => {
+    const section = document.createElement('div');
+    section.style.marginBottom = '14px';
+    section.innerHTML = `<div style="font-size:12px;letter-spacing:3px;color:${branch.color};margin-bottom:8px;border-bottom:1px solid ${branch.color}33;padding-bottom:4px;">${branch.label}</div>`;
+
+    // 按 tier 分層顯示
+    [1,2,3].forEach(tier => {
+      const nodes = branch.nodes.filter(n => n.tier === tier);
+      nodes.forEach(node => {
+        const learned   = G.learnedSkills.includes(node.id);
+        const equipped  = G.skills.includes(node.id);
+        const prereqMet = !node.prereq || G.learnedSkills.includes(node.prereq);
+        const canLearn  = !learned && prereqMet && G.skillPoints > 0;
+
+        const card = document.createElement('div');
+        card.className = 'skill-option';
+        card.style.opacity = (!learned && !prereqMet) ? '0.35' : '1';
+        card.style.marginLeft = (tier - 1) * 14 + 'px';
+        card.style.borderColor = learned ? branch.color + '88' : '';
+
+        const reqStr = Object.entries(node.req).map(([k,v]) => k.toUpperCase()+'×'+v).join('+');
+        const tierLabel = ['','Ⅰ','Ⅱ','Ⅲ'][tier];
+
+        card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;">
+            <div class="skill-option-name" style="color:${learned ? branch.color : '#c080e0'};">
+              ${tierLabel} ${node.name}
+              ${equipped ? ' <span style="color:#f0d080;font-size:10px;">◆裝備中</span>' : ''}
+              ${!learned && !prereqMet ? ' <span style="color:#555;font-size:10px;">🔒</span>' : ''}
+            </div>
+            <div class="skill-option-desc">${node.desc}</div>
+            <div class="skill-option-mp">需要：${reqStr}　MP：${node.mpCost}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+            ${canLearn ? `<button class="btn btn-sm" style="width:60px;" onclick="learnSkill('${node.id}')"><div class="btn-inner">學習</div></button>` : ''}
+            ${learned && !equipped ? `<button class="btn btn-sm" style="width:60px;" onclick="equipSkill('${node.id}')"><div class="btn-inner">裝備</div></button>` : ''}
+            ${equipped ? `<button class="btn btn-sm" style="width:60px;" onclick="equipSkill('${node.id}')"><div class="btn-inner">卸除</div></button>` : ''}
+          </div>
+        </div>`;
+        section.appendChild(card);
+      });
+    });
+    el.appendChild(section);
+  });
+}
+
+function showStatPointPanel() {
+  const sp = document.getElementById('barracks-statpoints');
+  if (!sp) return;
+  sp.style.display = '';
+  const statLabels = { atk:'物攻 +2', def:'物防 +2', matk:'魔攻 +2', mdef:'魔防 +2', maxHp:'最大HP +15', maxMp:'最大MP +10', spd:'速度 +2' };
+  sp.innerHTML = `<div style="font-size:12px;color:#f0d080;margin-bottom:8px;">剩餘屬性點：${G.statPoints}</div>` +
+    Object.entries(statLabels).map(([k, label]) =>
+      `<div class="upgrade-row">
+        <span style="font-size:13px;">${label} <span class="gold">(目前 ${k==='maxHp'?G.stats.maxHp:k==='maxMp'?G.stats.maxMp:G.stats[k]})</span></span>
+        <button class="btn btn-sm" style="width:60px;" onclick="spendStatPoint('${k}');"><div class="btn-inner">分配</div></button>
+      </div>`
+    ).join('');
+}
+
+function showLevelUpOverlay() {
+  const ov = document.getElementById('levelup-overlay');
+  if (!ov) return;
+  document.getElementById('levelup-lv').textContent = G.level;
+  renderLevelUpOverlay();
+  ov.classList.add('show');
+}
+
+function renderLevelUpOverlay() {
+  const statLabels = { atk:'物攻 +2', def:'物防 +2', matk:'魔攻 +2', mdef:'魔防 +2', maxHp:'最大HP +15', maxMp:'最大MP +10', spd:'速度 +2' };
+  const spEl = document.getElementById('levelup-statpoints');
+  if (spEl) spEl.innerHTML = `<div style="color:#f0d080;margin-bottom:8px;">屬性點 ×${G.statPoints}</div>` +
+    (G.statPoints > 0
+      ? Object.entries(statLabels).map(([k,lbl]) =>
+          `<button class="btn btn-sm" style="width:140px;margin:3px;" onclick="spendStatPoint('${k}');"><div class="btn-inner">${lbl}</div></button>`
+        ).join('')
+      : '<div style="color:#555;font-size:12px;">已分配完畢</div>');
+  const skEl = document.getElementById('levelup-skillpoints');
+  if (skEl) skEl.innerHTML = `<div style="color:#c080e0;margin:10px 0 8px;">技能點 ×${G.skillPoints}</div>` +
+    (G.skillPoints > 0
+      ? '<div style="color:#8a7a5a;font-size:11px;">前往「兵營→技能樹」學習新技能</div>'
+      : '<div style="color:#555;font-size:12px;">已使用完畢</div>');
+}
+
 
 function upgradeStat(key) {
 if (G.gold < 50) { toast('金幣不足'); return; }
