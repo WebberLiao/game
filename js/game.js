@@ -1,16 +1,21 @@
 // ══════════ 遊戲狀態 ══════════
 let G = null;
 
-function newGame(jobId) {
-return {
-gold: 200, xp: 0, level: 1, job: jobId,
-stats: JSON.parse(JSON.stringify(job.stats)),
-allDice: JSON.parse(JSON.stringify(job.dice)),
-equippedDice: [0, 1, 2],
-skills: [...job.startSkills],
-quests: [], bag: [], bagMax: 2, clearedMaps: [],
-equips: { weapon:null, armor:null, accessory:null },
-};
+function newGame(playerName) {
+  return {
+    name: playerName || 'Player',
+    gold: 200, xp: 0, level: 1,
+    statPoints: 0,
+    skillPoints: 1,
+    stats: { hp:80, maxHp:80, mp:40, maxMp:40, atk:8, def:5, matk:5, mdef:4, spd:7 },
+    allDice: JSON.parse(JSON.stringify(DEFAULT_DICE)),
+    equippedDice: [0, 1, 2],
+    learnedSkills: [],
+    skills: [],
+    quests: [], bag: [], bagMax: 2, clearedMaps: [],
+    equips: { weapon:null, armor:null, accessory:null },
+    storyQuests: {},
+  };
 }
 
 function getEquippedDice() {
@@ -60,7 +65,14 @@ const data = JSON.parse(ev.target.result);
 if (!data.stats) { toast('存檔格式錯誤'); return; }
 if (!data.allDice)      data.allDice = data.dice || [];
 if (!data.equippedDice) data.equippedDice = [0, 1, 2];
-if (!data.clearedMaps)  data.clearedMaps = [];
+if (!data.clearedMaps)   data.clearedMaps  = [];
+if (!data.equips)        data.equips       = { weapon:null, armor:null, accessory:null };
+if (!data.learnedSkills) data.learnedSkills = data.skills || [];
+if (!data.skills)        data.skills        = [];
+if (data.statPoints  === undefined) data.statPoints  = 0;
+if (data.skillPoints === undefined) data.skillPoints = 0;
+if (!data.name)          data.name = 'Player';
+if (!data.storyQuests)   data.storyQuests = {};
 if (!data.equips)        data.equips = { weapon:null, armor:null, accessory:null };
 if (!data.learnedSkills) data.learnedSkills = data.skills || [];
 if (!data.skills)        data.skills = [];
