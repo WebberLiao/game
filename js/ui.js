@@ -156,7 +156,7 @@ if (avail.length) {
 html += `<div class="dim" style="font-size:11px;letter-spacing:2px;margin:10px 0 4px;">── 可承接 ──</div>`;
 avail.forEach(def => {
 const rwd = `${def.reward.gold}金${def.reward.xp ? '＋' + def.reward.xp + 'XP' : ''}${def.reward.items.length ? '＋物品' : ''}`;
-html += `<div class="quest-item"><div class="quest-name">📜 ${def.name}</div> <div class="quest-prog">目標 ×${def.need}　獎勵：${rwd}</div> <button class="btn btn-sm" style="width:80px;margin-top:6px;" onclick="acceptQuest('${def.id}')"><div class="btn-inner">承　接</div></button></div>`;
+html += `<div class="quest-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="flex:1;"><div class="quest-name">📜 ${def.name}</div><div class="quest-prog">目標 ×${def.need}　獎勵：${rwd}</div></div><button class="btn btn-sm" style="width:64px;flex-shrink:0;" onclick="acceptQuest('${def.id}')"><div class="btn-inner">承　接</div></button></div>`;
 });
 }
 if (!html) html = '<div class="dim" style="font-size:12px;">所有任務已完成</div>';
@@ -355,20 +355,33 @@ function renderBarracks() {
   // 技能欄（已裝備）
   const slotEl = document.getElementById('barracks-skill-slots');
   if (slotEl) {
-    if (!G.skills.length) {
-      slotEl.innerHTML = '<div style="color:#555;font-size:12px;">未裝備任何技能</div>';
+    // 已習得但未裝備的技能也列出，讓玩家可在此裝備
+    const equippedHtml = G.skills.map((sid, i) => {
+      const sk = SKILLS_DEF.find(s => s.id === sid);
+      if (!sk) return '';
+      return `<div class="skill-option" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="skill-option-name" style="color:#f0d080;">${sk.name} <span style="font-size:10px;color:#f0d080;">◆裝備中</span></div>
+          <div class="skill-option-desc">${sk.desc}</div>
+        </div>
+        <button class="btn btn-sm" style="width:50px;" onclick="equipSkill('${sid}');renderBarracks();"><div class="btn-inner">卸除</div></button>
+      </div>`;
+    }).join('');
+    const unlearnedEquipHtml = (G.learnedSkills || []).filter(sid => !G.skills.includes(sid)).map(sid => {
+      const sk = SKILLS_DEF.find(s => s.id === sid);
+      if (!sk) return '';
+      return `<div class="skill-option" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="skill-option-name">${sk.name}</div>
+          <div class="skill-option-desc">${sk.desc}</div>
+        </div>
+        <button class="btn btn-sm" style="width:50px;" onclick="equipSkill('${sid}');renderBarracks();"><div class="btn-inner">裝備</div></button>
+      </div>`;
+    }).join('');
+    if (!equippedHtml && !unlearnedEquipHtml) {
+      slotEl.innerHTML = '<div style="color:#555;font-size:12px;">尚未學習任何技能，前往「技能樹」tab</div>';
     } else {
-      slotEl.innerHTML = G.skills.map((sid, i) => {
-        const sk = SKILLS_DEF.find(s => s.id === sid);
-        if (!sk) return '';
-        return `<div class="skill-option" style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div class="skill-option-name">${sk.name}</div>
-            <div class="skill-option-desc">${sk.desc}</div>
-          </div>
-          <button class="btn btn-sm" style="width:50px;" onclick="equipSkill('${sid}');"><div class="btn-inner">卸除</div></button>
-        </div>`;
-      }).join('');
+      slotEl.innerHTML = equippedHtml + (unlearnedEquipHtml ? '<div style="font-size:10px;color:#555;letter-spacing:2px;margin:10px 0 6px;">── 已習得未裝備 ──</div>' + unlearnedEquipHtml : '');
     }
   }
 
@@ -421,8 +434,7 @@ function renderSkillTree() {
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
             ${canLearn ? `<button class="btn btn-sm" style="width:60px;" onclick="learnSkill('${node.id}')"><div class="btn-inner">學習</div></button>` : ''}
-            ${learned && !equipped ? `<button class="btn btn-sm" style="width:60px;" onclick="equipSkill('${node.id}')"><div class="btn-inner">裝備</div></button>` : ''}
-            ${equipped ? `<button class="btn btn-sm" style="width:60px;" onclick="equipSkill('${node.id}')"><div class="btn-inner">卸除</div></button>` : ''}
+            ${learned && !canLearn ? `<div style="font-size:10px;color:${branch.color};margin-top:4px;letter-spacing:1px;">${equipped ? '◆ 裝備中' : '已習得'}</div>` : ''}
           </div>
         </div>`;
         section.appendChild(card);
