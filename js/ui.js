@@ -151,12 +151,35 @@ const rwd = `${def.reward.gold}金${def.reward.xp ? '＋' + def.reward.xp + 'XP'
 html += `<div class="quest-item"><div class="quest-name">📋 ${def.name}</div> <div class="quest-prog">進度 ${q.progress}/${def.need}　獎勵：${rwd}</div> ${can ? `<button class="btn btn-sm" style="width:80px;margin-top:6px;" onclick="claimQuest('${q.id}')"><div class="btn-inner">領　取</div></button>` : ''}</div>`;
 });
 const accepted = G.quests.map(q => q.id);
-const avail = QUESTS_DEF.filter(d => !accepted.includes(d.id));
+// 只顯示「對應地圖已解鎖（曾進入冒險）」的任務
+const avail = QUESTS_DEF.filter(d => {
+  if (accepted.includes(d.id)) return false;
+  if (!d.mapReq) return true;
+  // 地圖「可進入」條件：MAPS 陣列中存在，且不需要額外前置（目前版本全地圖都可選擇）
+  // 「曾進入」的判斷：clearedMaps 包含，或者更寬鬆地允許進入過即可
+  // 採用「已解鎖地圖」：第一張地圖無前置，後續地圖需前一張通關
+  const mapOrder = ['village','plains','ruins','cave','swamp'];
+  const reqIdx = mapOrder.indexOf(d.mapReq);
+  if (reqIdx === 0) return true;  // 第一張永遠可接
+  // 前一張地圖需已通關
+  return G.clearedMaps && G.clearedMaps.includes(mapOrder[reqIdx - 1]);
+});
+const locked = QUESTS_DEF.filter(d => !accepted.includes(d.id) && !avail.includes(d));
 if (avail.length) {
-html += `<div class="dim" style="font-size:11px;letter-spacing:2px;margin:10px 0 4px;">── 可承接 ──</div>`;
+html += '<div class="dim" style="font-size:11px;letter-spacing:2px;margin:10px 0 4px;">── 可承接 ──</div>';
 avail.forEach(def => {
-const rwd = `${def.reward.gold}金${def.reward.xp ? '＋' + def.reward.xp + 'XP' : ''}${def.reward.items.length ? '＋物品' : ''}`;
-html += `<div class="quest-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="flex:1;"><div class="quest-name">📜 ${def.name}</div><div class="quest-prog">目標 ×${def.need}　獎勵：${rwd}</div></div><button class="btn btn-sm" style="width:64px;flex-shrink:0;" onclick="acceptQuest('${def.id}')"><div class="btn-inner">承　接</div></button></div>`;
+  const map = MAPS ? MAPS.find(m => m.id === def.mapReq) : null;
+  const mapLabel = map ? ` <span style="font-size:10px;color:#555;">[${map.name}]</span>` : '';
+  const rwd = `${def.reward.gold}金${def.reward.xp ? '＋' + def.reward.xp + 'XP' : ''}${def.reward.items.length ? '＋物品' : ''}`;
+  html += `<div class="quest-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="flex:1;"><div class="quest-name">📜 ${def.name}${mapLabel}</div><div class="quest-prog">目標 ×${def.need}　獎勵：${rwd}</div></div><button class="btn btn-sm" style="width:64px;flex-shrink:0;" onclick="acceptQuest('${def.id}')"><div class="btn-inner">承　接</div></button></div>`;
+});
+}
+if (locked.length) {
+html += '<div class="dim" style="font-size:11px;letter-spacing:2px;margin:10px 0 4px;">── 尚未解鎖 ──</div>';
+locked.forEach(def => {
+  const map = MAPS ? MAPS.find(m => m.id === def.mapReq) : null;
+  const mapLabel = map ? map.name : def.mapReq;
+  html += `<div class="quest-item" style="opacity:.4;"><div class="quest-name">🔒 ${def.name}</div><div class="quest-prog">需先通關：${mapLabel}</div></div>`;
 });
 }
 if (!html) html = '<div class="dim" style="font-size:12px;">所有任務已完成</div>';
@@ -182,19 +205,43 @@ renderQuestsPanel();
 
 // ── 背包顯示 ──
 function renderBagDisplay(elId, withSell) {
-const el = document.getElementById(elId);
-el.innerHTML = '';
-if (!G.bag.length) { el.innerHTML = '<div class="item-empty">背包空空如也</div>'; return; }
-const grid = document.createElement('div');
-grid.className = 'item-grid';
-G.bag.forEach((id, i) => {
-const def = ITEMS_DEF[id], card = document.createElement('div');
-card.className = 'item-card';
-card.innerHTML = `<span class="item-icon">${def.icon}</span><div class="item-name">${def.name}</div><div class="item-desc">${withSell ? '賣出 ' + def.sellPrice + ' 金' : def.desc}</div>`;
-if (withSell) card.onclick = () => sellItem(i);
-grid.appendChild(card);
-});
-el.appendChild(grid);
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  if (!G.bag.length) { el.innerHTML = '<div class="item-empty">背包空空如也</div>'; return; }
+  const grid = document.createElement('div');
+  grid.className = 'item-grid';
+  G.bag.forEach((entry, i) => {
+    const card = document.createElement('div');
+    if (typeof entry === 'string') {
+      // 消耗品
+      const def = ITEMS_DEF[entry];
+      if (!def) return;
+      card.className = 'item-card';
+      card.innerHTML = `<span class="item-icon">${def.icon}</span><div class="item-name">${def.name}</div><div class="item-desc">${withSell ? '賣出 ' + def.sellPrice + ' 金' : def.desc}</div>`;
+      if (withSell) card.onclick = () => sellItem(i);
+    } else if (entry && entry.slot) {
+      // 裝備 object
+      const eq = entry;
+      const rarityColor = ['#8a7a5a','#60c060','#4090e0','#c060e0'][eq.rarity] || '#8a7a5a';
+      const statsStr = (() => {
+        const s = { ...eq.stats };
+        (eq.affixes||[]).forEach(a => { s[a.stat] = (s[a.stat]||0) + a.val; });
+        return Object.entries(s).map(([k,v]) => `${k.toUpperCase()}${v>0?'+':''}${v}`).join(' ');
+      })();
+      card.className = 'equip-card';
+      card.innerHTML = `<span style="font-size:18px;">${eq.icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:${rarityColor};">${eq.fullName}</div>
+          <div class="equip-stat">${statsStr}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+          <button class="btn btn-sm" style="width:52px;" onclick="equipItem(G.bag[${i}]);renderShop();renderTavern();"><div class="btn-inner">裝備</div></button>
+          ${withSell ? `<button class="btn btn-sm" style="width:52px;" onclick="sellEquip(${i})"><div class="btn-inner">售出</div></button>` : ''}
+        </div>`;
+    } else return;
+    grid.appendChild(card);
+  });
+  el.appendChild(grid);
 }
 
 // ══════════ 商店 ══════════
@@ -493,13 +540,7 @@ toast(`${STAT_LABELS[key]} 強化`);
 renderBarracks();
 }
 
-function learnSkill(id) {
-if (G.gold < 80) { toast('金幣不足'); return; }
-G.gold -= 80;
-G.skills.push(id);
-toast('技能習得！');
-renderBarracks();
-}
+// learnSkill 已移至 game.js（含重複檢查與前置條件驗證）
 
 // ══════════ 煉金工坊 ══════════
 const FACE_OPTIONS = ['atk', 'def', 'sp', 'matk'];
