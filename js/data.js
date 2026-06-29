@@ -120,12 +120,12 @@ const MERCHANT_ITEMS = ['hp_pot','mp_pot','hp_big','atk_buf','def_buf','antidote
 
 // ══════════ 任務 ══════════
 const QUESTS_DEF = [
-{ id:'q1', name:'盜賊掃蕩',  target:'bandit',   need:5,  reward:{ gold:60, xp:40, items:['hp_pot']  } },
-{ id:'q2', name:'哥布林掃蕩',target:'goblin',   need:10, reward:{ gold:80, xp:50, items:['hp_pot']  } },
-{ id:'q3', name:'骸骨清除',  target:'skeleton', need:5,  reward:{ gold:70, xp:45, items:[]           } },
-{ id:'q4', name:'野獸獵人',  target:'wolf',     need:3,  reward:{ gold:50, xp:35, items:['atk_buf'] } },
-{ id:'q5', name:'蝙蝠驅除',  target:'bat',      need:5,  reward:{ gold:55, xp:38, items:[]           } },
-{ id:'q6', name:'毒沼探險',  target:'viper',    need:8,  reward:{ gold:90, xp:60, items:['antidote'] } },
+{ id:'q1', name:'盜賊掃蕩',   target:'bandit',   need:5,  mapReq:'village', reward:{ gold:60,  xp:40, items:['hp_pot']  } },
+{ id:'q2', name:'哥布林掃蕩', target:'goblin',   need:10, mapReq:'ruins',   reward:{ gold:80,  xp:50, items:['hp_pot']  } },
+{ id:'q3', name:'骸骨清除',   target:'skeleton', need:5,  mapReq:'cave',    reward:{ gold:70,  xp:45, items:[]           } },
+{ id:'q4', name:'野獸獵人',   target:'wolf',     need:3,  mapReq:'plains',  reward:{ gold:50,  xp:35, items:['atk_buf'] } },
+{ id:'q5', name:'蝙蝠驅除',   target:'bat',      need:5,  mapReq:'cave',    reward:{ gold:55,  xp:38, items:[]           } },
+{ id:'q6', name:'毒沼探險',   target:'viper',    need:8,  mapReq:'swamp',   reward:{ gold:90,  xp:60, items:['antidote'] } },
 ];
 // ══════════ NPC 對話 ══════════
 const NPCS = {
