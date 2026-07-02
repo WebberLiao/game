@@ -57,19 +57,37 @@ startBattle();
 }
 
 function startBattle() {
-const map = MAPS.find(m => m.id === combat.mapId);
-const isBoss = combat.floor === combat.maxFloor;
-const key = isBoss ? map.boss : map.pool[Math.floor(Math.random() * map.pool.length)];
-const tmpl = ALL_ENEMIES[key];
-combat.enemy = { ...tmpl, curHp: tmpl.hp, nextAction: pickAction(tmpl) };
-combat.shield = false; combat.evade = false; combat.counter = false;
-combat.atkBuf = 0; combat.defBuf = 0; combat.itemUsed = false;
-combat.enemyBurn = 0; combat.enemyStun = false;
-document.getElementById('combat-floor').textContent =
-`第 ${combat.floor}/${combat.maxFloor} 關${isBoss ? ' 👑BOSS' : ''}`;
-rollDice();
-renderCombat();
-addLog(`${isBoss ? '👑 BOSS！遭遇 ' : '⚔️ 遭遇 '}${combat.enemy.name}！`, 'info');
+  const map = MAPS.find(m => m.id === combat.mapId);
+  const isBossFloor = combat.floor === combat.maxFloor;
+  let enemyKey;
+  if (isBossFloor) {
+    enemyKey = map.boss;
+  } else {
+    // 10% 精英怪
+    const elites = ['eliteKnight','eliteWitch','eliteTroll'];
+    enemyKey = Math.random() < 0.10
+      ? elites[Math.floor(Math.random() * elites.length)]
+      : map.pool[Math.floor(Math.random() * map.pool.length)];
+  }
+  const tmpl = ALL_ENEMIES[enemyKey];
+  if (!tmpl) { addLog('敵人資料錯誤：' + enemyKey, 'dmg'); return; }
+  combat.enemy = { ...tmpl, id: enemyKey, curHp: tmpl.hp, nextAction: pickAction(tmpl) };
+  combat.shield = false; combat.evade = false; combat.counter = false;
+  combat.atkBuf = 0; combat.defBuf = 0; combat.itemUsed = false;
+  combat.enemyBurn = 0; combat.enemyStun = false;
+  combat.playerStunned = false; combat.playerFrozen = false;
+  combat.playerBurnStacks = combat.playerBurnStacks || 0;
+  const isElite = tmpl.elite === true;
+  const isBoss  = tmpl.boss  === true;
+  const label   = isBoss ? '👑 BOSS' : isElite ? '★ 精英' : '⚔️';
+  document.getElementById('combat-floor').textContent =
+    `第 ${combat.floor}/${combat.maxFloor} 關${isBossFloor ? ' 👑BOSS' : isElite ? ' ★精英' : ''}`;
+  rollDice();
+  renderCombat();
+  addLog(`${label}！遭遇 ${tmpl.name}！`, isElite ? 'skill' : 'info');
+  if (isElite) addLog('★ 精英怪掉落率提升，小心應對！', 'skill');
+  // Boss 二階段提示
+  if (isBoss && tmpl.phase2) addLog(`⚡ ${tmpl.name} 擁有二階段形態！HP 低於 40% 時行動改變！`, 'skill');
 }
 
 function pickAction(e) {
@@ -78,9 +96,21 @@ return e.actions[Math.floor(Math.random() * e.actions.length)];
 
 // ══════════ 骰子 ══════════
 function rollDice() {
-const eq = getEquippedDice();
-combat.rolled = eq.map(d => d.faces[Math.floor(Math.random() * d.faces.length)]);
-combat.rerolled = false;
+  // 火山：每次骰骰子前扣 1 HP
+  if (combat.mapId === 'volcano' && G.stats.hp > 1) {
+    G.stats.hp = Math.max(1, G.stats.hp - 1);
+    addLog('🌋 熔岩侵蝕！你失去 1 HP', 'dmg');
+  }
+  // 雪山：凍結狀態下骰子全 DEF
+  const eq = getEquippedDice();
+  if (combat.playerFrozen) {
+    combat.rolled = eq.map(() => 'def');
+    combat.playerFrozen = false;
+    addLog('❄️ 你被凍結！骰子全部固定為 DEF 面', 'dmg');
+  } else {
+    combat.rolled = eq.map(d => d.faces[Math.floor(Math.random() * d.faces.length)]);
+  }
+  combat.rerolled = false;
 }
 
 function rerollDie(idx) {
@@ -276,7 +306,23 @@ const e = combat.enemy, s = G.stats;
 const playerDef = s.def + combat.defBuf;
 const action = e.nextAction;
 
-if (action === 'poison') {
+if (action === 'freeze') {
+  combat.playerFrozen = true;
+  const fzdmg = Math.max(1, Math.round(e.atk * 0.6) - playerDef);
+  G.stats.hp = Math.max(0, G.stats.hp - fzdmg);
+  addLog('❄️ ' + e.name + ' 冰封！你受到 ' + fzdmg + ' 傷害並被凍結', 'dmg');
+  renderStatusTags();
+} else if (action === 'burn') {
+  combat.playerBurnStacks = (combat.playerBurnStacks || 0) + 2;
+  const bndmg = Math.max(1, Math.round(e.atk * 0.8) - playerDef);
+  G.stats.hp = Math.max(0, G.stats.hp - bndmg);
+  addLog('🔥 ' + e.name + ' 燃燒攻擊！你受到 ' + bndmg + ' 傷害，燃燒 ' + combat.playerBurnStacks + ' 層', 'dmg');
+  renderStatusTags();
+} else if (action === 'stun') {
+  combat.playerStunned = true;
+  addLog('💫 ' + e.name + ' 暈眩！你下回合無法行動', 'dmg');
+  renderStatusTags();
+} else if (action === 'poison') {
 combat.playerPoison = true;
 addLog(`☠️ ${e.name} 施毒！你中毒了！`, 'poison');
 renderStatusTags();
