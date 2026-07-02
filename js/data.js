@@ -94,6 +94,29 @@ viper:       { name:'毒蛇',      hp:25,  atk:7,  def:2, mdef:2,  xp:10, gold:8
 spider:      { name:'毒蜘蛛',    hp:32,  atk:8,  def:3, mdef:3,  xp:12, gold:9,  type:'spider',    actions:['attack','poison','attack'],  boss:false },
 frog:        { name:'毒蛙',      hp:20,  atk:6,  def:1, mdef:4,  xp:9,  gold:7,  type:'frog',      actions:['poison','attack','attack'],  boss:false },
 vipQueen:    { name:'毒蛇女王',  hp:80,  atk:11, def:5, mdef:6,  xp:55, gold:50, type:'vipboss',   actions:['attack','heavy','poison'],   boss:true  },
+
+// ── 雪山 ──
+snowWolf:    { name:'雪原狼',    hp:55,  atk:13, def:5, mdef:4,  xp:22, gold:16, type:'snowwolf',  actions:['attack','heavy','attack'],   boss:false },
+yeti:        { name:'雪人',      hp:70,  atk:16, def:7, mdef:4,  xp:28, gold:20, type:'yeti',      actions:['attack','heavy','defend'],   boss:false },
+iceGolem:    { name:'冰魔像',    hp:90,  atk:14, def:10,mdef:6,  xp:32, gold:24, type:'icegolem',  actions:['attack','defend','defend'],  boss:false },
+frostDrake:  { name:'霜龍幼體',  hp:170, atk:20, def:10,mdef:12, xp:90, gold:80, type:'frostboss', actions:['attack','heavy','freeze'],   boss:true, phase2:{ atk:24, actions:['freeze','heavy','heavy'] } },
+
+// ── 火山 ──
+lavaBat:     { name:'熔岩蝙蝠',  hp:48,  atk:12, def:3, mdef:5,  xp:20, gold:15, type:'lavabat',   actions:['attack','attack','heavy'],   boss:false },
+fireLizard:  { name:'火蜥蜴',    hp:62,  atk:15, def:6, mdef:4,  xp:25, gold:18, type:'fireliz',   actions:['attack','burn','attack'],    boss:false },
+magmaGiant:  { name:'岩漿巨人',  hp:85,  atk:18, def:9, mdef:5,  xp:35, gold:26, type:'magmagiant',actions:['heavy','attack','defend'],   boss:false },
+infernoLord: { name:'業火之主',  hp:200, atk:22, def:12,mdef:10, xp:110,gold:100,type:'infernoboss',actions:['burn','heavy','attack'],    boss:true, phase2:{ atk:28, actions:['burn','burn','heavy'] } },
+
+// ── 神殿 ──
+cultist:     { name:'邪教徒',    hp:60,  atk:14, def:5, mdef:8,  xp:26, gold:18, type:'cultist',   actions:['attack','heavy','attack'],   boss:false },
+golem:       { name:'石像守衛',  hp:100, def:14, atk:10,mdef:8,  xp:32, gold:22, type:'golem',     actions:['defend','attack','defend'],  boss:false },
+highPriest:  { name:'邪神祭司',  hp:75,  atk:12, def:6, mdef:15, xp:30, gold:24, type:'priest',    actions:['attack','stun','heavy'],     boss:false },
+ancientGod:  { name:'遠古神靈',  hp:280, atk:25, def:15,mdef:18, xp:150,gold:140,type:'godboss',   actions:['heavy','stun','attack'],     boss:true, phase2:{ atk:30, actions:['stun','heavy','stun'] } },
+
+// ── 精英怪（各地圖隨機出現） ──
+eliteKnight: { name:'★ 黑甲騎士', hp:120, atk:18, def:12,mdef:8, xp:50, gold:45, type:'elite',    actions:['attack','heavy','defend'],   boss:false, elite:true },
+eliteWitch:  { name:'★ 黑魔女',   hp:90,  atk:22, def:6, mdef:14,xp:50, gold:45, type:'elite',    actions:['heavy','attack','stun'],     boss:false, elite:true },
+eliteTroll:  { name:'★ 巨魔',     hp:150, atk:20, def:10,mdef:6, xp:55, gold:48, type:'elite',    actions:['heavy','heavy','defend'],    boss:false, elite:true },
 };
 
 // ══════════ 地圖 ══════════
@@ -102,7 +125,10 @@ const MAPS = [
 { id:'plains',  name:'草　原',   icon:'🌾', desc:'野獸成群的廣闊草原',    floors:10, pool:['rabbit','rabbit','bigrat','bigrat','wolf'],    boss:'plainsBoss',   special:false },
 { id:'ruins',   name:'廢棄村落', icon:'🏚️', desc:'哥布林盤踞的廢墟',      floors:10, pool:['goblin','goblin','goblinArcher','goblinMage'], boss:'goblinKing',   special:false },
 { id:'cave',    name:'洞　穴',   icon:'🕳️', desc:'黑暗中潛伏的不死生物',  floors:10, pool:['skeleton','skeleton','bat','bat','skeleton'],  boss:'skeletonMage', special:false },
-{ id:'swamp',   name:'毒沼澤',   icon:'🌿', desc:'【特殊】骰子被中毒詛咒', floors:5,  pool:['viper','viper','spider','frog'],               boss:'vipQueen',     special:true  },
+{ id:'swamp',   name:'毒沼澤',   icon:'🌿', desc:'【特殊】骰子被中毒詛咒', floors:5,  pool:['viper','viper','spider','frog'],                boss:'vipQueen',     special:true,  unlockReq:'cave'   },
+{ id:'snowmnt', name:'雪　山',   icon:'🏔️', desc:'極寒之地，SP骰消耗加倍',   floors:12, pool:['snowWolf','snowWolf','yeti','iceGolem'],          boss:'frostDrake',   special:true,  unlockReq:'ruins'  },
+{ id:'volcano', name:'火　山',   icon:'🌋', desc:'【特殊】每回合扣1HP（熔岩）',floors:12,pool:['lavaBat','fireLizard','fireLizard','magmaGiant'], boss:'infernoLord',  special:true,  unlockReq:'cave'   },
+{ id:'temple',  name:'遠古神殿', icon:'🏛️', desc:'最終挑戰，Boss有兩個階段',  floors:15, pool:['cultist','cultist','golem','highPriest'],          boss:'ancientGod',   special:false, unlockReq:'swamp'  },
 ];
 
 // ══════════ 物品 ══════════
@@ -120,12 +146,16 @@ const MERCHANT_ITEMS = ['hp_pot','mp_pot','hp_big','atk_buf','def_buf','antidote
 
 // ══════════ 任務 ══════════
 const QUESTS_DEF = [
-{ id:'q1', name:'盜賊掃蕩',   target:'bandit',   need:5,  mapReq:'village', reward:{ gold:60,  xp:40, items:['hp_pot']  } },
-{ id:'q2', name:'哥布林掃蕩', target:'goblin',   need:10, mapReq:'ruins',   reward:{ gold:80,  xp:50, items:['hp_pot']  } },
-{ id:'q3', name:'骸骨清除',   target:'skeleton', need:5,  mapReq:'cave',    reward:{ gold:70,  xp:45, items:[]           } },
-{ id:'q4', name:'野獸獵人',   target:'wolf',     need:3,  mapReq:'plains',  reward:{ gold:50,  xp:35, items:['atk_buf'] } },
-{ id:'q5', name:'蝙蝠驅除',   target:'bat',      need:5,  mapReq:'cave',    reward:{ gold:55,  xp:38, items:[]           } },
-{ id:'q6', name:'毒沼探險',   target:'viper',    need:8,  mapReq:'swamp',   reward:{ gold:90,  xp:60, items:['antidote'] } },
+{ id:'q1',  name:'盜賊掃蕩',   target:'bandit',    need:5,  mapReq:'village', reward:{ gold:60,  xp:40,  items:['hp_pot']  } },
+{ id:'q2',  name:'哥布林掃蕩', target:'goblin',    need:10, mapReq:'ruins',   reward:{ gold:80,  xp:50,  items:['hp_pot']  } },
+{ id:'q3',  name:'骸骨清除',   target:'skeleton',  need:5,  mapReq:'cave',    reward:{ gold:70,  xp:45,  items:[]           } },
+{ id:'q4',  name:'野獸獵人',   target:'wolf',      need:3,  mapReq:'plains',  reward:{ gold:50,  xp:35,  items:['atk_buf'] } },
+{ id:'q5',  name:'蝙蝠驅除',   target:'bat',       need:5,  mapReq:'cave',    reward:{ gold:55,  xp:38,  items:[]           } },
+{ id:'q6',  name:'毒沼探險',   target:'viper',     need:8,  mapReq:'swamp',   reward:{ gold:90,  xp:60,  items:['antidote'] } },
+{ id:'q7',  name:'雪山獵人',   target:'yeti',      need:5,  mapReq:'snowmnt', reward:{ gold:120, xp:80,  items:['hp_pot']  } },
+{ id:'q8',  name:'熔岩掃蕩',   target:'fireLizard',need:6,  mapReq:'volcano', reward:{ gold:130, xp:85,  items:['hp_pot']  } },
+{ id:'q9',  name:'邪教清剿',   target:'cultist',   need:8,  mapReq:'temple',  reward:{ gold:150, xp:100, items:['mp_pot']  } },
+{ id:'q10', name:'精英獵人',   target:'elite',     need:3,  mapReq:'ruins',   reward:{ gold:200, xp:120, items:['hp_pot','mp_pot'] } },
 ];
 // ══════════ NPC 對話 ══════════
 const NPCS = {
