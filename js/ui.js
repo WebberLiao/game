@@ -60,16 +60,24 @@ el.innerHTML = '';
 MAPS.forEach((map, i) => {
 const isCleared = cleared.includes(map.id);
 let isUnlocked;
-if (map.special) {
-isUnlocked = cleared.includes('village');
+if (map.unlockReq) {
+  isUnlocked = cleared.includes(map.unlockReq);
+} else if (i === 0) {
+  isUnlocked = true;
 } else {
-const normalMaps = MAPS.filter(m => !m.special);
-const ni = normalMaps.findIndex(m => m.id === map.id);
-isUnlocked = ni === 0 || cleared.includes(normalMaps[ni - 1].id);
+  isUnlocked = cleared.includes(MAPS[i - 1].id);
 }
 const card = document.createElement('div');
 card.className = `map-card${!isUnlocked ? ' locked' : ''}${isCleared ? ' cleared' : ''}${map.special ? ' special' : ''}`;
-card.innerHTML = `<div class="map-icon">${map.icon}</div><div class="map-info"> <div class="map-name">${map.name}${map.special ? '<span class="status-tag status-poison" style="margin-left:6px;">特殊</span>' : ''}</div> <div class="map-desc">${map.desc}</div> <div class="map-floors">📍 ${map.floors} 關　Boss：${ALL_ENEMIES[map.boss].name}</div> <div class="map-status">${isCleared ? '<span class="green">✓ 已通關</span>' : isUnlocked ? '<span style="color:#c8a96e;">可挑戰</span>' : '<span class="dim">🔒 未解鎖</span>'}</div> </div>`;
+const boss = ALL_ENEMIES[map.boss];
+const bossPhase = boss && boss.phase2 ? ' <span style="color:#e06060;font-size:10px;">⚡二階段</span>' : '';
+const eliteTag = '<span style="color:#c8a050;font-size:10px;"> ★精英</span>';
+card.innerHTML = `<div class="map-icon">${map.icon}</div><div class="map-info">
+  <div class="map-name">${map.name}${map.special ? '<span class="status-tag status-poison" style="margin-left:6px;">特殊</span>' : ''}</div>
+  <div class="map-desc">${map.desc}</div>
+  <div class="map-floors">📍 ${map.floors} 關　Boss：${boss ? boss.name : '???'}${bossPhase}${eliteTag}</div>
+  <div class="map-status">${isCleared ? '<span class="green">✓ 已通關</span>' : isUnlocked ? '<span style="color:#c8a96e;">可挑戰</span>' : '<span class="dim">🔒 '+( map.unlockReq ? '通關 '+( MAPS.find(m=>m.id===map.unlockReq)||{name:map.unlockReq}).name+' 後解鎖' : '未解鎖')+'</span>'}</div>
+</div>`;
 if (isUnlocked) card.onclick = () => enterAdventure(map.id);
 el.appendChild(card);
 });
