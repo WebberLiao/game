@@ -411,6 +411,26 @@ function renderBarracks() {
   const slotEl = document.getElementById('barracks-skill-slots');
   if (slotEl) {
     // 已習得但未裝備的技能也列出，讓玩家可在此裝備
+    // 被動技能不顯示在技能槽（永久生效，不佔用技能槽）
+    const passiveLearnedHtml = (G.learnedSkills || []).filter(sid =>
+      (typeof ALL_PASSIVES !== 'undefined') && ALL_PASSIVES.some(p => p.id === sid)
+    ).map(sid => {
+      const p = ALL_PASSIVES.find(pp => pp.id === sid);
+      if (!p) return '';
+      const bonus = p.statBonus ? Object.entries(p.statBonus).map(([k,v])=>k.toUpperCase()+(v>0?'+':'')+v).join(' ') : '';
+      const trigDesc = p.type === 'trigger' ? '觸發：' + (p.trigger||'') : '';
+      return `<div class="skill-option" style="border-color:#a0c0ff44;opacity:.85;">
+        <div>
+          <div class="skill-option-name" style="color:#a0c0ff;">◇ ${p.name} <span style="font-size:10px;color:#a0c0ff;">永久生效</span></div>
+          <div class="skill-option-desc">${bonus ? bonus + '　' : ''}${trigDesc}</div>
+        </div>
+      </div>`;
+    }).join('');
+    if (passiveLearnedHtml) {
+      slotEl.innerHTML = '<div style="font-size:10px;color:#a0c0ff;letter-spacing:2px;margin-bottom:6px;">── 已習得被動（永久）──</div>' + passiveLearnedHtml;
+    } else {
+      slotEl.innerHTML = '';
+    }
     const equippedHtml = G.skills.map((sid, i) => {
       const sk = SKILLS_DEF.find(s => s.id === sid);
       if (!sk) return '';
@@ -422,7 +442,11 @@ function renderBarracks() {
         <button class="btn btn-sm" style="width:50px;" onclick="equipSkill('${sid}');renderBarracks();"><div class="btn-inner">卸除</div></button>
       </div>`;
     }).join('');
-    const unlearnedEquipHtml = (G.learnedSkills || []).filter(sid => !G.skills.includes(sid)).map(sid => {
+    const unlearnedEquipHtml = (G.learnedSkills || []).filter(sid => {
+      if (G.skills.includes(sid)) return false;
+      const isPassive = (typeof ALL_PASSIVES !== 'undefined') && ALL_PASSIVES.some(p => p.id === sid);
+      return !isPassive; // 被動技能不需要裝備
+    }).map(sid => {
       const sk = SKILLS_DEF.find(s => s.id === sid);
       if (!sk) return '';
       return `<div class="skill-option" style="display:flex;justify-content:space-between;align-items:center;">
@@ -460,12 +484,20 @@ function renderSkillTree() {
     section.innerHTML = `<div style="font-size:12px;letter-spacing:3px;color:${branch.color};margin-bottom:8px;border-bottom:1px solid ${branch.color}33;padding-bottom:4px;">${branch.label}</div>`;
 
     // 按 tier 分層顯示
-    [1,2,3].forEach(tier => {
-      const nodes = branch.nodes.filter(n => n.tier === tier);
+    [1,2,3,4].forEach(tier => {
+      // Tier 4 從 PASSIVE_TREE 取
+      let nodes;
+      if (tier === 4) {
+        const passiveBranch = (typeof PASSIVE_TREE !== 'undefined') ? PASSIVE_TREE[branchId] : [];
+        nodes = (passiveBranch || []).filter(n => n.tier === 4);
+      } else {
+        nodes = branch.nodes.filter(n => n.tier === tier);
+      }
       nodes.forEach(node => {
         const learned   = G.learnedSkills.includes(node.id);
         const equipped  = G.skills.includes(node.id);
         const prereqMet = !node.prereq || G.learnedSkills.includes(node.prereq);
+        // 被動的 req 是 none（不需要骰面）
         const canLearn  = !learned && prereqMet && G.skillPoints > 0;
 
         const card = document.createElement('div');
@@ -481,11 +513,13 @@ function renderSkillTree() {
           <div style="flex:1;">
             <div class="skill-option-name" style="color:${learned ? branch.color : '#c080e0'};">
               ${tierLabel} ${node.name}
+              ${node.passive ? ' <span style="color:#a0c0ff;font-size:10px;">◇被動</span>' : ''}
               ${equipped ? ' <span style="color:#f0d080;font-size:10px;">◆裝備中</span>' : ''}
               ${!learned && !prereqMet ? ' <span style="color:#555;font-size:10px;">🔒</span>' : ''}
             </div>
             <div class="skill-option-desc">${node.desc}</div>
-            <div class="skill-option-mp">需要：${reqStr}　MP：${node.mpCost}</div>
+            ${node.passive ? '' : '<div class="skill-option-mp">需要：' + reqStr + '　MP：' + node.mpCost + '</div>'}
+            ${node.passive && node.statBonus ? '<div class="equip-stat" style="color:#a0c0ff;">' + Object.entries(node.statBonus).map(([k,v])=>k.toUpperCase()+(v>0?'+':'')+v).join(' / ') + '</div>' : ''}
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
             ${canLearn ? `<button class="btn btn-sm" style="width:60px;" onclick="learnSkill('${node.id}')"><div class="btn-inner">學習</div></button>` : ''}
@@ -776,4 +810,61 @@ function switchShopTab(tab) {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     document.getElementById('shop-pane-' + t).style.display = t === tab ? '' : 'none';
   });
+}
+
+// ══════════ 成就系統 UI ══════════
+function renderAchievements() {
+  const el = document.getElementById('achievements-panel');
+  if (!el || !G) return;
+  if (typeof ACHIEVEMENTS === 'undefined') { el.innerHTML = '<div style="color:#555;">成就資料載入中</div>'; return; }
+  if (!G.achievements) G.achievements = [];
+  if (!G.achStats)     G.achStats = {};
+
+  const cats = [
+    { id:'battle',  label:'⚔️ 戰鬥', color:'#e07040' },
+    { id:'explore', label:'🗺️ 探索', color:'#40c080' },
+    { id:'growth',  label:'📈 成長', color:'#6060e0' },
+    { id:'secret',  label:'🌀 秘密', color:'#c060e0' },
+  ];
+
+  el.innerHTML = cats.map(cat => {
+    const achs = ACHIEVEMENTS.filter(a => a.cat === cat.id);
+    const unlocked = achs.filter(a => G.achievements.includes(a.id)).length;
+    const rows = achs.map(ach => {
+      const done = G.achievements.includes(ach.id);
+      const isHidden = ach.hidden && !done;
+      const name = isHidden ? '???' : ach.name;
+      const desc = isHidden ? '達成後解鎖說明' : ach.desc;
+      const icon = isHidden ? '🔒' : ach.icon;
+      let progressBar = '';
+      if (!isHidden && ach.progress && ach.total) {
+        const cur = Math.min(ach.progress(G), ach.total);
+        const pct = Math.floor(cur / ach.total * 100);
+        progressBar = `<div style="margin-top:4px;background:rgba(255,255,255,.08);border-radius:2px;height:4px;">
+          <div style="width:${pct}%;background:${done ? '#60c060' : cat.color};height:100%;border-radius:2px;transition:.3s;"></div>
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:2px;">${cur}/${ach.total}</div>`;
+      }
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(200,160,80,.08);opacity:${done ? 1 : isHidden ? 0.5 : 0.75};">
+        <span style="font-size:18px;flex-shrink:0;">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:${done ? cat.color : '#8a7a5a'};">${name}${done ? ' ✓' : ''}</div>
+          <div style="font-size:10px;color:#555;margin-top:2px;">${desc}</div>
+          ${progressBar}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:${cat.color};letter-spacing:3px;margin-bottom:8px;display:flex;justify-content:space-between;">
+        <span>${cat.label}</span><span style="color:#555;">${unlocked}/${achs.length}</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function recordNpcTalk(npcId) {
+  addAchStat('npcTalks', 1);
+  // 隱居賢者低等級成就
+  if (npcId === 'hermit_sage' && G.level < 3) addAchStat('youngSage', 1);
 }
