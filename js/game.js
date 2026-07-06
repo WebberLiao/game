@@ -15,6 +15,12 @@ function newGame(playerName) {
     quests: [], bag: [], bagMax: 2, clearedMaps: [],
     equips: { weapon:null, armor:null, accessory:null },
     storyQuests: {},
+    achievements: [],      // 已解鎖的成就 id 列表
+    achStats: {            // 成就追蹤計數器
+      kills: 0, eliteKills: 0, bossNoItem: 0, perfectRuns: 0,
+      npcTalks: 0, youngSage: 0, brokeRun: 0, lastHpBoss: 0,
+      lowLevelClear: 0,
+    },
   };
 }
 
@@ -73,6 +79,8 @@ if (data.statPoints  === undefined) data.statPoints  = 0;
 if (data.skillPoints === undefined) data.skillPoints = 0;
 if (!data.name)          data.name = 'Player';
 if (!data.storyQuests)   data.storyQuests = {};
+if (!data.achievements)  data.achievements = [];
+if (!data.achStats)      data.achStats = { kills:0, eliteKills:0, bossNoItem:0, perfectRuns:0, npcTalks:0, youngSage:0, brokeRun:0, lastHpBoss:0, lowLevelClear:0 };
 if (!data.equips)        data.equips = { weapon:null, armor:null, accessory:null };
 if (!data.learnedSkills) data.learnedSkills = data.skills || [];
 if (!data.skills)        data.skills = [];
@@ -267,4 +275,65 @@ function buyEquip(baseId) {
   G.bag.push(item);
   toast('購入 ' + item.fullName);
   renderShop();
+}
+
+// ══════════ 被動技能系統 ══════════
+function calcPassives() {
+  // 回傳所有已學被動提供的加成 { stat: value }
+  const bonus = {};
+  if (!G || !G.learnedSkills) return bonus;
+  G.learnedSkills.forEach(id => {
+    const p = (typeof ALL_PASSIVES !== 'undefined') ? ALL_PASSIVES.find(p => p.id === id) : null;
+    if (!p || !p.statBonus) return;
+    Object.entries(p.statBonus).forEach(([k, v]) => {
+      bonus[k] = (bonus[k] || 0) + v;
+    });
+  });
+  return bonus;
+}
+
+function getEffectiveStatWithPassive(stat) {
+  const base = G.stats[stat] || 0;
+  const eqBonus = (typeof calcEquipStats === 'function') ? (calcEquipStats()[stat] || 0) : 0;
+  const passBonus = calcPassives()[stat] || 0;
+  return base + eqBonus + passBonus;
+}
+
+function triggerPassive(trigger, context) {
+  // 觸發型被動：on_hit / on_kill / on_evade / on_low_hp
+  if (!G || !G.learnedSkills) return null;
+  const results = [];
+  G.learnedSkills.forEach(id => {
+    const p = (typeof ALL_PASSIVES !== 'undefined') ? ALL_PASSIVES.find(p => p.id === id) : null;
+    if (!p || p.type !== 'trigger' || p.trigger !== trigger) return;
+    if (Math.random() > (p.chance || 1)) return;
+    results.push(p);
+  });
+  return results;
+}
+
+// ══════════ 成就系統 ══════════
+function checkAchievements() {
+  if (!G || typeof ACHIEVEMENTS === 'undefined') return [];
+  const newlyUnlocked = [];
+  ACHIEVEMENTS.forEach(ach => {
+    if (G.achievements.includes(ach.id)) return;
+    try {
+      if (ach.cond(G)) {
+        G.achievements.push(ach.id);
+        newlyUnlocked.push(ach);
+      }
+    } catch(e) {}
+  });
+  if (newlyUnlocked.length) {
+    newlyUnlocked.forEach(ach => toast('🏆 成就解鎖：' + ach.name + '　' + ach.icon));
+    saveGame();
+  }
+  return newlyUnlocked;
+}
+
+function addAchStat(key, amount) {
+  if (!G || !G.achStats) return;
+  G.achStats[key] = (G.achStats[key] || 0) + (amount || 1);
+  checkAchievements();
 }
