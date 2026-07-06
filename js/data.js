@@ -497,3 +497,138 @@ const EQUIP_SHOP_POOL = {
   tier2: ['w_long','w_bow','w_tome','w_mace','a_leather','a_robe','r_ring','r_gem'],
   tier3: ['a_plate','a_chain','a_silk','r_cloak','r_crown'],
 };
+
+// ══════════ 被動技能（各分支 Tier 4，學後永久生效）══════════
+// type: 'stat'（純加成）| 'trigger'（觸發型）
+// passive: true 標記此節點為被動
+const PASSIVE_TREE = {
+  power: [
+    { id:'p_ironflesh',  name:'鐵血肉身',  tier:4, prereq:'berserker', passive:true, type:'stat',
+      statBonus:{ maxHp:30, def:3 },
+      desc:'永久 MaxHP+30、DEF+3',
+    },
+    { id:'p_wrath',      name:'憤怒之心',  tier:4, prereq:'warshout',  passive:true, type:'trigger',
+      trigger:'on_hit', chance:0.25, effect:'atkbuf2',
+      desc:'普攻命中時 25% 機率本回合 ATK+4',
+    },
+  ],
+  magic: [
+    { id:'p_manawell',   name:'魔力之泉',  tier:4, prereq:'arcane',    passive:true, type:'stat',
+      statBonus:{ maxMp:30, matk:4 },
+      desc:'永久 MaxMP+30、MATK+4',
+    },
+    { id:'p_burnmaster', name:'燃燒精通',  tier:4, prereq:'blizzard',  passive:true, type:'trigger',
+      trigger:'on_kill', chance:1.0, effect:'mprefund',
+      desc:'擊殺敵人時回復 15 MP',
+    },
+  ],
+  agile: [
+    { id:'p_windfoot',   name:'疾風步',    tier:4, prereq:'swiftkill', passive:true, type:'stat',
+      statBonus:{ spd:5, mdef:4 },
+      desc:'永久 SPD+5、MDEF+4',
+    },
+    { id:'p_shadowstep', name:'暗影步',    tier:4, prereq:'smokebomb', passive:true, type:'trigger',
+      trigger:'on_evade', chance:1.0, effect:'counteratk',
+      desc:'成功閃避時自動反擊（造成 ATK×1 傷害）',
+    },
+  ],
+  holy: [
+    { id:'p_holyaura',   name:'聖光護罩',  tier:4, prereq:'holylight', passive:true, type:'stat',
+      statBonus:{ mdef:6, maxHp:20 },
+      desc:'永久 MDEF+6、MaxHP+20',
+    },
+    { id:'p_blessing',   name:'神聖祝福',  tier:4, prereq:'sanctuary', passive:true, type:'trigger',
+      trigger:'on_low_hp', threshold:0.3, chance:1.0, effect:'autoheal',
+      desc:'HP 低於 30% 時戰鬥結束自動回復 25% MaxHP（每場戰鬥一次）',
+    },
+  ],
+};
+
+// 扁平化
+const ALL_PASSIVES = Object.values(PASSIVE_TREE).flat();
+
+// ══════════ 成就系統 ══════════
+// hidden: true → 達成前不顯示名稱（顯示 ???）
+// category: 'battle' | 'explore' | 'growth' | 'secret'
+const ACHIEVEMENTS = [
+  // ── 戰鬥類（顯示進度）──
+  { id:'ach_first_blood', name:'初戰告捷',  icon:'⚔️',  cat:'battle',  hidden:false,
+    desc:'完成第一場戰鬥',       cond: g => (g.achStats?.kills||0) >= 1 },
+  { id:'ach_kill10',      name:'戰場老兵',  icon:'🗡️',  cat:'battle',  hidden:false,
+    desc:'累計擊敗 10 隻敵人',   cond: g => (g.achStats?.kills||0) >= 10,
+    progress: g => Math.min(g.achStats?.kills||0, 10), total:10 },
+  { id:'ach_kill50',      name:'百戰沙場',  icon:'⚔️',  cat:'battle',  hidden:false,
+    desc:'累計擊敗 50 隻敵人',   cond: g => (g.achStats?.kills||0) >= 50,
+    progress: g => Math.min(g.achStats?.kills||0, 50), total:50 },
+  { id:'ach_kill_elite',  name:'精英剋星',  icon:'★',   cat:'battle',  hidden:false,
+    desc:'擊敗 5 隻精英怪',      cond: g => (g.achStats?.eliteKills||0) >= 5,
+    progress: g => Math.min(g.achStats?.eliteKills||0, 5), total:5 },
+  { id:'ach_boss_all',    name:'Boss終結者',icon:'👑',  cat:'battle',  hidden:false,
+    desc:'擊敗所有地圖的 Boss',  cond: g => (g.clearedMaps||[]).length >= 8 },
+  { id:'ach_no_item',     name:'純粹之戰',  icon:'🥊',  cat:'battle',  hidden:true,
+    desc:'不使用任何物品完成 Boss 戰',
+    cond: g => (g.achStats?.bossNoItem||0) >= 1 },
+  { id:'ach_perfect',     name:'完美防守',  icon:'🛡️',  cat:'battle',  hidden:true,
+    desc:'一場戰鬥中完全不受傷（完整通關一張地圖）',
+    cond: g => (g.achStats?.perfectRuns||0) >= 1 },
+
+  // ── 探索類（顯示進度）──
+  { id:'ach_first_map',   name:'踏出第一步',icon:'🗺️',  cat:'explore', hidden:false,
+    desc:'首次完成地圖通關',     cond: g => (g.clearedMaps||[]).length >= 1 },
+  { id:'ach_map3',        name:'旅途漸遠',  icon:'🧭',  cat:'explore', hidden:false,
+    desc:'通關 3 張地圖',        cond: g => (g.clearedMaps||[]).length >= 3,
+    progress: g => Math.min((g.clearedMaps||[]).length, 3), total:3 },
+  { id:'ach_all_maps',    name:'天涯旅人',  icon:'🌍',  cat:'explore', hidden:false,
+    desc:'通關全部 8 張地圖',    cond: g => (g.clearedMaps||[]).length >= 8,
+    progress: g => Math.min((g.clearedMaps||[]).length, 8), total:8 },
+  { id:'ach_swamp',       name:'沼澤倖存者',icon:'🌿',  cat:'explore', hidden:false,
+    desc:'通關毒沼澤',           cond: g => (g.clearedMaps||[]).includes('swamp') },
+  { id:'ach_temple',      name:'神殿征服者',icon:'🏛️',  cat:'explore', hidden:true,
+    desc:'通關遠古神殿',         cond: g => (g.clearedMaps||[]).includes('temple') },
+  { id:'ach_npc10',       name:'交友廣闊',  icon:'💬',  cat:'explore', hidden:false,
+    desc:'與 NPC 對話 10 次',    cond: g => (g.achStats?.npcTalks||0) >= 10,
+    progress: g => Math.min(g.achStats?.npcTalks||0, 10), total:10 },
+
+  // ── 成長類（顯示進度）──
+  { id:'ach_lv5',         name:'成長中的冒險者',icon:'📈',cat:'growth', hidden:false,
+    desc:'達到 5 級',            cond: g => (g.level||1) >= 5,
+    progress: g => Math.min(g.level||1, 5), total:5 },
+  { id:'ach_lv10',        name:'老練冒險者',icon:'🌟',  cat:'growth',  hidden:false,
+    desc:'達到 10 級',           cond: g => (g.level||1) >= 10,
+    progress: g => Math.min(g.level||1, 10), total:10 },
+  { id:'ach_skill5',      name:'技能收藏家',icon:'📚',  cat:'growth',  hidden:false,
+    desc:'學會 5 個技能',        cond: g => (g.learnedSkills||[]).length >= 5,
+    progress: g => Math.min((g.learnedSkills||[]).length, 5), total:5 },
+  { id:'ach_passive3',    name:'潛力覺醒',  icon:'💡',  cat:'growth',  hidden:false,
+    desc:'學會 3 個被動技能',    cond: g => (g.learnedSkills||[]).filter(id => ALL_PASSIVES.some(p=>p.id===id)).length >= 3,
+    progress: g => Math.min((g.learnedSkills||[]).filter(id => ALL_PASSIVES.some(p=>p.id===id)).length, 3), total:3 },
+  { id:'ach_rich',        name:'富甲一方',  icon:'💰',  cat:'growth',  hidden:false,
+    desc:'擁有 1000 金幣',       cond: g => (g.gold||0) >= 1000,
+    progress: g => Math.min(g.gold||0, 1000), total:1000 },
+  { id:'ach_equip_set',   name:'套裝達人',  icon:'🎽',  cat:'growth',  hidden:true,
+    desc:'集齊並穿上一套完整套裝',
+    cond: g => {
+      if (!g.equips || !g.learnedSkills) return false;
+      return Object.values(SET_BONUSES||{}).some(set =>
+        set.pieces.every(p => Object.values(g.equips).some(eq => eq && eq.id === p))
+      );
+    }
+  },
+
+  // ── 隱藏成就 ──
+  { id:'ach_secret_npc',  name:'說話的石頭', icon:'🪨', cat:'secret',  hidden:true,
+    desc:'（隱藏）與隱居賢者在低等級時搭話',
+    cond: g => (g.achStats?.youngSage||0) >= 1 },
+  { id:'ach_no_gold',     name:'一無所有',   icon:'🪙', cat:'secret',  hidden:true,
+    desc:'（隱藏）金幣歸零後依然存活',
+    cond: g => (g.achStats?.brokeRun||0) >= 1 },
+  { id:'ach_die_then_win',name:'死裡逃生',   icon:'💀', cat:'secret',  hidden:true,
+    desc:'（隱藏）HP 剩 1 時擊敗 Boss',
+    cond: g => (g.achStats?.lastHpBoss||0) >= 1 },
+  { id:'ach_all_passive', name:'境界大成',   icon:'🌀', cat:'secret',  hidden:true,
+    desc:'（隱藏）學會全部 8 個被動技能',
+    cond: g => ALL_PASSIVES.every(p => (g.learnedSkills||[]).includes(p.id)) },
+  { id:'ach_speedrun',    name:'閃電旅人',   icon:'⚡', cat:'secret',  hidden:true,
+    desc:'（隱藏）在 Lv.3 以下通關任一地圖',
+    cond: g => (g.achStats?.lowLevelClear||0) >= 1 },
+];
