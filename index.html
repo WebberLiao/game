@@ -175,25 +175,50 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
 
 <!-- 酒館 -->
 
-<div id="screen-tavern" class="screen">
+<div id="screen-tavern" class="screen with-tabs">
   <div class="topbar"><div class="topbar-title">酒　館</div><div class="gold-display">💰 <span id="tavern-gold">0</span></div></div>
-  <div class="scroll-area">
-    <div class="panel"><div class="panel-title">◆ 角色狀態</div><div id="tavern-char-info"></div></div>
-    <div class="panel">
-      <div class="panel-title">◆ 骰子選擇 <span class="dim" style="font-size:10px;">選擇出戰的3顆（共 <span id="dice-owned-count">0</span> 顆）</span></div>
-      <div id="tavern-dice-select"></div>
-      <div style="text-align:center;margin-top:10px;">
-        <button class="btn btn-sm btn-wide" onclick="saveDiceSelection()"><div class="btn-inner">確認選擇</div></button>
+  <div class="screen-tab-bar">
+    <div class="screen-tab active" onclick="switchScreenTab('tavern','status')">狀態</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','dice')">骰子</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','bag')">背包</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','quest')">任務</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','npc')">人物</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','equip')">裝備</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','ach')">成就</div>
+  </div>
+  <div class="scroll-area tab-content-area">
+    <div class="tab-pane tavern-pane active" id="tavern-pane-status">
+      <div class="panel"><div id="tavern-char-info"></div></div>
+    </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-dice">
+      <div class="panel">
+        <div class="panel-title">◆ 骰子選擇 <span class="dim" style="font-size:10px;">選擇出戰的3顆（共 <span id="dice-owned-count">0</span> 顆）</span></div>
+        <div id="tavern-dice-select"></div>
+        <div style="text-align:center;margin-top:10px;">
+          <button class="btn btn-sm btn-wide" onclick="saveDiceSelection()"><div class="btn-inner">確認選擇</div></button>
+        </div>
       </div>
     </div>
-    <div class="panel"><div class="panel-title">◆ 背包 <span class="dim" style="font-size:10px;" id="bag-cap-label"></span></div><div id="tavern-bag"></div></div>
-    <div class="panel"><div class="panel-title">◆ 任　務</div><div id="tavern-quests"></div></div>
-    <div class="panel"><div class="panel-title">◆ 酒館人物</div><div id="tavern-npcs"></div></div>
-    <div class="panel"><div class="panel-title">◆ 已裝備</div><div id="equip-slots-shop"></div></div>
-    <div class="text-center mt16">
-      <button class="btn btn-wide btn-sm" onclick="saveGame()"><div class="btn-inner">存　檔</div></button>
-      <button class="btn btn-wide btn-sm mt8" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
+    <div class="tab-pane tavern-pane" id="tavern-pane-bag">
+      <div class="panel"><div class="panel-title">◆ 背包 <span class="dim" style="font-size:10px;" id="bag-cap-label"></span></div><div id="tavern-bag"></div></div>
     </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-quest">
+      <div class="panel"><div class="panel-title">◆ 劇情任務</div><div id="story-quest-log"></div></div>
+      <div class="panel"><div class="panel-title">◆ 討伐任務</div><div id="tavern-quests"></div></div>
+    </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-npc">
+      <div class="panel"><div id="tavern-npcs"></div></div>
+    </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-equip">
+      <div class="panel"><div id="equip-slots-shop"></div></div>
+    </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-ach">
+      <div class="panel"><div id="achievements-panel"></div></div>
+    </div>
+  </div>
+  <div class="screen-bottom-bar">
+    <button class="btn btn-wide btn-sm" onclick="saveGame()"><div class="btn-inner">存　檔</div></button>
+    <button class="btn btn-wide btn-sm" onclick="showScreen('screen-town')"><div class="btn-inner">返　回</div></button>
   </div>
 </div>
 
