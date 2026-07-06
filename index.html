@@ -12,6 +12,18 @@
 body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',serif;min-height:100vh;overflow-x:hidden;}
 .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;padding:20px;}
 .screen.active{display:flex;}
+/* ── Tab 系統 ── */
+.screen.with-tabs{padding:0;align-items:stretch;height:100vh;min-height:unset;overflow:hidden;}
+.screen-tab-bar{display:flex;width:100%;border-bottom:1px solid rgba(200,160,80,.25);background:rgba(8,6,2,.95);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.screen-tab-bar::-webkit-scrollbar{display:none;}
+.screen-tab{flex:0 0 auto;min-width:52px;padding:10px 8px;text-align:center;font-size:11px;letter-spacing:1px;color:#555;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.2s;}
+.screen-tab.active{color:#f0d080;border-bottom-color:#f0d080;}
+.screen-tab:hover:not(.active){color:#c8a96e;}
+.tab-content-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;}
+.tab-pane{display:none;padding:0;}
+.tab-pane.active{display:block;}
+.screen-bottom-bar{display:flex;gap:8px;padding:10px 16px;border-top:1px solid rgba(200,160,80,.15);background:rgba(8,6,2,.95);flex-shrink:0;width:100%;box-sizing:border-box;}
+.screen-bottom-bar .btn{flex:1;}
 .gold{color:#f0d080;}.dim{color:#8a7a5a;}.green{color:#60d080;}.red{color:#e05050;}
 .deco{width:280px;height:1px;background:linear-gradient(90deg,transparent,#c8a96e,#f0d080,#c8a96e,transparent);margin:10px 0;}
 .main-title{font-size:42px;font-weight:bold;color:#f0d080;text-shadow:0 0 20px rgba(200,160,80,.6),2px 2px 0 rgba(0,0,0,.8);letter-spacing:8px;text-align:center;animation:glow 3s ease-in-out infinite alternate;}
@@ -386,12 +398,13 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
       <div style="color:#8a7a5a;font-size:11px;margin-bottom:4px;">對方：</div>
       <div id="npc-reply-text" style="color:#c8d8a0;font-size:13px;line-height:1.8;border-left:2px solid rgba(200,160,80,.4);padding-left:10px;"></div>
       <div style="text-align:center;margin-top:14px;">
-        <button class="btn btn-sm" style="width:140px;" onclick="currentNpcDialogue && (document.getElementById('npc-options').style.display='', document.getElementById('npc-reply-area').style.display='none')"><div class="btn-inner">繼續對話</div></button>
+        <button class="btn btn-sm" style="width:140px;" onclick="currentNpcDialogue && (document.getElementById('npc-options').style.display='', document.getElementById('npc-reply-area').style.display='none', document.getElementById('npc-close-btn').style.display='block')"><div class="btn-inner">繼續對話</div></button>
         <button class="btn btn-sm" style="width:140px;margin-top:6px;" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
       </div>
     </div>
-    <div id="npc-close-btn" style="text-align:center;margin-top:8px;display:block;">
-      <button class="btn btn-sm" style="width:140px;" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
+    <!-- 永遠顯示的離開按鈕，在回覆時隱藏 -->
+    <div id="npc-close-btn" style="text-align:center;margin-top:8px;">
+      <button class="btn btn-wide btn-sm" onclick="closeNpcDialogue()"><div class="btn-inner">告別離開</div></button>
     </div>
   </div>
 </div>
