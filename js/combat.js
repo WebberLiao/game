@@ -170,6 +170,16 @@ updatePlayerBars();
 if (dmg > 0) {
 addLog(`⚔️ ${parts.join('　')}　合計 ${dmg} 傷害`, 'dmg');
 applyDmgToEnemy(dmg);
+// on_hit 觸發被動（普攻命中）
+if (typeof triggerPassive === 'function') {
+  const hp = triggerPassive('on_hit', {});
+  if (hp && hp.length) hp.forEach(p => {
+    if (p.effect === 'atkbuf2') {
+      combat.atkBuf = (combat.atkBuf || 0) + 4;
+      addLog('💢 憤怒之心：本回合 ATK+4！', 'skill');
+    }
+  });
+}
 } else if (dN > 0) {
 addLog(`🛡️ 防禦強化：${parts.join('　')}`, 'info');
 } else if (pN === 0) {
@@ -332,6 +342,17 @@ let dmg = Math.max(1, Math.floor(e.atk * mult) - playerDef);
 if (combat.evade) {
 addLog(`💨 ${e.name} 攻擊！你完美閃避！`, 'skill');
 combat.evade = false;
+// on_evade 觸發型被動：暗影步
+const evadePassives = triggerPassive('on_evade', {});
+if (evadePassives && evadePassives.length) {
+  evadePassives.forEach(p => {
+    if (p.effect === 'counteratk') {
+      const ctrDmg = Math.max(1, (G.stats.atk || 0) - Math.floor((combat.enemy.def||0) * 0.5));
+      combat.enemy.curHp = Math.max(0, combat.enemy.curHp - ctrDmg);
+      addLog('🌑 暗影步：自動反擊！造成 ' + ctrDmg + ' 傷害', 'skill');
+    }
+  });
+}
 } else {
 if (combat.shield) dmg = Math.max(1, Math.floor(dmg * .4));
 if (combat.counter) {
@@ -377,6 +398,7 @@ function enemyDied() {
 const e = combat.enemy;
 addLog(`🏆 擊敗 ${e.name}！獲得 ${e.gold} 金幣`, 'heal');
 G.gold += e.gold; G.xp += e.xp;
+if (G.gold <= 0) addAchStat('brokeRun', 1);
 G.quests.forEach(q => {
 const def = QUESTS_DEF.find(d => d.id === q.id);
 if (def && e.type === def.target && q.progress < def.need) q.progress++;
@@ -396,6 +418,22 @@ if ((isBoss || equipRoll < 0.15) && G.bag.length < G.bagMax) {
     addLog(`🎁 ${tag ? tag + ' ' : ''}裝備掉落：${eqItem.fullName}`, 'heal');
   }
 }
+// 成就統計
+if (typeof addAchStat === 'function') {
+  addAchStat('kills', 1);
+  if (e.elite) addAchStat('eliteKills', 1);
+  if (e.boss && G.stats.hp <= 1) addAchStat('lastHpBoss', 1);
+}
+// on_kill 觸發被動
+if (typeof triggerPassive === 'function') {
+  const kp = triggerPassive('on_kill', {});
+  if (kp && kp.length) kp.forEach(p => {
+    if (p.effect === 'mprefund') {
+      G.stats.mp = Math.min(G.stats.maxMp, G.stats.mp + 15);
+      addLog('💡 燃燒精通：擊殺回復 15 MP', 'skill');
+    }
+  });
+}
 checkLevelUp();
 combat.floor++;
 setTimeout(() => {
@@ -405,6 +443,16 @@ else nextFloor();
 }
 
 function endAdventure() {
+  // 神聖祝福：HP < 30% 且此場戰鬥未觸發過
+  if (!combat.blessingUsed) {
+    const blessPassives = triggerPassive('on_low_hp', {});
+    if (blessPassives && blessPassives.length && G.stats.hp < G.stats.maxHp * 0.3) {
+      const healAmt = Math.floor(G.stats.maxHp * 0.25);
+      G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + healAmt);
+      combat.blessingUsed = true;
+      addLog('✨ 神聖祝福：HP 危急，自動回復 ' + healAmt + ' HP！', 'heal');
+    }
+  }
 const map = MAPS.find(m => m.id === combat.mapId);
 // 還原中毒骰面
 if (combat.poisonBackup) {
