@@ -865,6 +865,99 @@ function renderAchievements() {
 
 function recordNpcTalk(npcId) {
   addAchStat('npcTalks', 1);
+  if (typeof updateDailyProgress === 'function') updateDailyProgress('talk_npc', 1);
   // 隱居賢者低等級成就
   if (npcId === 'hermit_sage' && G.level < 3) addAchStat('youngSage', 1);
+}
+
+// ══════════ 每日任務 & 簽到 UI ══════════
+function renderDailyPanel() {
+  const el = document.getElementById('daily-panel');
+  if (!el || !G) return;
+  if (typeof refreshDailyQuests === 'function') refreshDailyQuests();
+
+  const today = typeof todayStr === 'function' ? todayStr() : '';
+  const checkin = G.checkin || { lastDate:'', streak:0, totalDays:0 };
+  const daily   = G.daily   || { quests:[], claimed:[] };
+  const checkedToday = checkin.lastDate === today;
+
+  // ── 簽到區塊 ──
+  const streakColor = checkin.streak >= 7 ? '#f0d080' : checkin.streak >= 3 ? '#c8a96e' : '#8a7a5a';
+  let checkinHtml = `<div style="background:rgba(200,160,80,.06);border:1px solid rgba(200,160,80,.2);border-radius:6px;padding:14px;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div>
+        <div style="font-size:13px;color:#e8d5a3;letter-spacing:2px;">📅 每日簽到</div>
+        <div style="font-size:11px;color:${streakColor};margin-top:4px;">連續 ${checkin.streak} 天　累積 ${checkin.totalDays} 天</div>
+      </div>
+      ${checkedToday
+        ? '<div style="font-size:11px;color:#555;letter-spacing:1px;">今日已簽到 ✓</div>'
+        : '<button class="btn btn-sm" style="width:90px;" onclick="handleCheckin()"><div class="btn-inner">簽　到</div></button>'
+      }
+    </div>`;
+
+  // 里程碑進度
+  if (typeof CHECKIN_MILESTONES !== 'undefined') {
+    const nextMilestone = CHECKIN_MILESTONES.find(m => checkin.streak < m.days);
+    if (nextMilestone) {
+      const pct = Math.floor(checkin.streak / nextMilestone.days * 100);
+      checkinHtml += `<div style="font-size:10px;color:#555;margin-bottom:4px;">下個里程碑：${nextMilestone.desc}</div>
+        <div style="background:rgba(255,255,255,.06);border-radius:2px;height:5px;">
+          <div style="width:${pct}%;background:#c8a96e;height:100%;border-radius:2px;transition:.4s;"></div>
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:3px;">${checkin.streak}/${nextMilestone.days} 天</div>`;
+    } else {
+      checkinHtml += '<div style="font-size:10px;color:#f0d080;">✦ 已達成所有里程碑！</div>';
+    }
+  }
+  checkinHtml += '</div>';
+
+  // ── 每日任務區塊 ──
+  let questHtml = `<div style="font-size:11px;color:#8a7a5a;letter-spacing:2px;margin-bottom:8px;">📋 今日任務</div>`;
+  if (!daily.quests || !daily.quests.length) {
+    questHtml += '<div style="color:#555;font-size:12px;">今日任務載入中…</div>';
+  } else {
+    questHtml += daily.quests.map((q, i) => {
+      const claimed  = (daily.claimed || []).includes(q.id);
+      const progress = Math.min(q.progress || 0, q.need);
+      const pct      = Math.floor(progress / q.need * 100);
+      const rewardStr = `${q.reward.gold}金 ＋${q.reward.xp}XP`;
+      return `<div style="background:rgba(20,15,8,.8);border:1px solid rgba(200,160,80,${claimed?'.1':q.done?'.4':'.15'});border-radius:4px;padding:10px;margin-bottom:8px;opacity:${claimed?'.5':'1'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;color:${claimed?'#555':q.done?'#80e080':'#c8a96e'};">${claimed?'✓ ':q.done?'✦ ':''}${q.desc}</div>
+            <div style="font-size:10px;color:#555;margin-top:3px;">獎勵：${rewardStr}</div>
+            <div style="background:rgba(255,255,255,.06);border-radius:2px;height:4px;margin-top:6px;">
+              <div style="width:${pct}%;background:${q.done?'#60c060':'#c8a96e'};height:100%;border-radius:2px;transition:.3s;"></div>
+            </div>
+            <div style="font-size:9px;color:#555;margin-top:2px;">${progress}/${q.need}</div>
+          </div>
+          ${q.done && !claimed ? `<button class="btn btn-sm" style="width:60px;flex-shrink:0;" onclick="handleClaimDaily(${i})"><div class="btn-inner">領取</div></button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  el.innerHTML = checkinHtml + questHtml;
+}
+
+function handleCheckin() {
+  if (typeof doCheckin !== 'function') return;
+  const result = doCheckin();
+  if (!result) { toast('今日已簽到'); return; }
+  let msg = `📅 簽到成功！連續 ${result.streak} 天
+獲得 ${result.gold} 金、${result.xp} XP`;
+  if (result.milestone) msg += result.milestone;
+  toast(msg);
+  renderDailyPanel();
+  renderTavernStatus();
+}
+
+function handleClaimDaily(idx) {
+  if (typeof claimDailyQuest === 'function') claimDailyQuest(idx);
+  renderDailyPanel();
+  renderTavernStatus();
+}
+
+function renderTavernStatus() {
+  document.getElementById('tavern-gold') && (document.getElementById('tavern-gold').textContent = G.gold);
 }
