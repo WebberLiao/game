@@ -190,6 +190,7 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
   <div class="topbar"><div class="topbar-title">酒　館</div><div class="gold-display">💰 <span id="tavern-gold">0</span></div></div>
   <div class="screen-tab-bar">
     <div class="screen-tab active" onclick="switchScreenTab('tavern','status')">狀態</div>
+    <div class="screen-tab" onclick="switchScreenTab('tavern','daily')">每日</div>
     <div class="screen-tab" onclick="switchScreenTab('tavern','dice')">骰子</div>
     <div class="screen-tab" onclick="switchScreenTab('tavern','bag')">背包</div>
     <div class="screen-tab" onclick="switchScreenTab('tavern','quest')">任務</div>
@@ -200,6 +201,9 @@ body{background:#0a0a0f;color:#e8d5a3;font-family:Georgia,'Times New Roman',seri
   <div class="scroll-area tab-content-area">
     <div class="tab-pane tavern-pane active" id="tavern-pane-status">
       <div class="panel"><div id="tavern-char-info"></div></div>
+    </div>
+    <div class="tab-pane tavern-pane" id="tavern-pane-daily">
+      <div class="panel"><div id="daily-panel"></div></div>
     </div>
     <div class="tab-pane tavern-pane" id="tavern-pane-dice">
       <div class="panel">
