@@ -250,6 +250,7 @@ const base = sk.dmgStat === 'matk' ? s.matk : s.atk;
 const res  = sk.dmgStat === 'matk' ? combat.enemy.mdef : combat.enemy.def;
 const dmg  = Math.max(1, Math.floor(base * sk.dmgMult) + combat.atkBuf - res);
 addLog(`✨ 【${sk.name}】：造成 ${dmg} 點傷害！`, 'skill');
+if (typeof updateDailyProgress === 'function') updateDailyProgress('use_skill', 1);
 applyDmgToEnemy(dmg);
 if (combat.enemy && combat.enemy.curHp > 0) enemyTurn();
 }
@@ -398,6 +399,8 @@ function enemyDied() {
 const e = combat.enemy;
 addLog(`🏆 擊敗 ${e.name}！獲得 ${e.gold} 金幣`, 'heal');
 G.gold += e.gold; G.xp += e.xp;
+if (typeof updateDailyProgress === 'function' && e.gold > 0) updateDailyProgress('earn_gold', e.gold);
+if (G.gold <= 0 && typeof addAchStat === 'function') addAchStat('brokeRun', 1);
 if (G.gold <= 0) addAchStat('brokeRun', 1);
 G.quests.forEach(q => {
 const def = QUESTS_DEF.find(d => d.id === q.id);
@@ -423,6 +426,13 @@ if (typeof addAchStat === 'function') {
   addAchStat('kills', 1);
   if (e.elite) addAchStat('eliteKills', 1);
   if (e.boss && G.stats.hp <= 1) addAchStat('lastHpBoss', 1);
+}
+// 每日任務進度
+if (typeof updateDailyProgress === 'function') {
+  updateDailyProgress('kill', 1);
+  if (e.elite) updateDailyProgress('kill_elite', 1);
+  // 低血量擊敗成就
+  if (G.stats.hp < G.stats.maxHp * 0.25) updateDailyProgress('low_hp_win', 1);
 }
 // on_kill 觸發被動
 if (typeof triggerPassive === 'function') {
