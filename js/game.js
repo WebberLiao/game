@@ -15,11 +15,18 @@ function newGame(playerName) {
     quests: [], bag: [], bagMax: 2, clearedMaps: [],
     equips: { weapon:null, armor:null, accessory:null },
     storyQuests: {},
-    achievements: [],      // 已解鎖的成就 id 列表
-    achStats: {            // 成就追蹤計數器
-      kills: 0, eliteKills: 0, bossNoItem: 0, perfectRuns: 0,
-      npcTalks: 0, youngSage: 0, brokeRun: 0, lastHpBoss: 0,
-      lowLevelClear: 0,
+    achievements: [],
+    achStats: { kills:0, eliteKills:0, bossNoItem:0, perfectRuns:0, npcTalks:0, youngSage:0, brokeRun:0, lastHpBoss:0, lowLevelClear:0 },
+    daily: {               // 每日任務
+      date: '',            // 今日日期字串 YYYY-MM-DD
+      quests: [],          // [{ id, type, need, desc, reward, progress, done }]
+      claimed: [],         // 已領取的任務 id
+    },
+    checkin: {             // 簽到
+      lastDate: '',        // 上次簽到日期
+      streak: 0,           // 連續天數
+      totalDays: 0,        // 累積天數
+      claimedMilestones: [],
     },
   };
 }
@@ -80,6 +87,8 @@ if (data.skillPoints === undefined) data.skillPoints = 0;
 if (!data.name)          data.name = 'Player';
 if (!data.storyQuests)   data.storyQuests = {};
 if (!data.achievements)  data.achievements = [];
+if (!data.daily)         data.daily = { date:'', quests:[], claimed:[] };
+if (!data.checkin)       data.checkin = { lastDate:'', streak:0, totalDays:0, claimedMilestones:[] };
 if (!data.achStats)      data.achStats = { kills:0, eliteKills:0, bossNoItem:0, perfectRuns:0, npcTalks:0, youngSage:0, brokeRun:0, lastHpBoss:0, lowLevelClear:0 };
 if (!data.equips)        data.equips = { weapon:null, armor:null, accessory:null };
 if (!data.learnedSkills) data.learnedSkills = data.skills || [];
@@ -336,4 +345,105 @@ function addAchStat(key, amount) {
   if (!G || !G.achStats) return;
   G.achStats[key] = (G.achStats[key] || 0) + (amount || 1);
   checkAchievements();
+}
+
+// ══════════ 工具：取今日日期字串 ══════════
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// ══════════ 每日任務 ══════════
+function refreshDailyQuests() {
+  if (!G) return;
+  if (!G.daily) G.daily = { date:'', quests:[], claimed:[] };
+  const today = todayStr();
+  if (G.daily.date === today) return;  // 今天已刷新
+
+  // 隨機選 3 個不重複任務
+  const pool = typeof DAILY_QUEST_POOL !== 'undefined' ? [...DAILY_QUEST_POOL] : [];
+  const picked = [];
+  const difficulties = ['easy','medium','hard'];
+  // 按難易度各選一個
+  const easy   = pool.filter(q => q.reward.gold <= 80);
+  const medium = pool.filter(q => q.reward.gold > 80 && q.reward.gold <= 180);
+  const hard   = pool.filter(q => q.reward.gold > 180);
+  [easy, medium, hard].forEach(group => {
+    if (group.length) picked.push(group[Math.floor(Math.random() * group.length)]);
+  });
+
+  G.daily.date    = today;
+  G.daily.quests  = picked.map(q => ({ ...q, progress: 0, done: false }));
+  G.daily.claimed = [];
+  saveGame();
+}
+
+function updateDailyProgress(type, amount) {
+  if (!G || !G.daily) return;
+  refreshDailyQuests();
+  let updated = false;
+  G.daily.quests.forEach(q => {
+    if (q.done || q.type !== type) return;
+    q.progress = (q.progress || 0) + (amount || 1);
+    if (q.progress >= q.need) {
+      q.done = true;
+      updated = true;
+      toast('📋 每日任務完成：' + q.desc + '！回酒館領取獎勵');
+    }
+  });
+  if (updated) saveGame();
+}
+
+function claimDailyQuest(idx) {
+  if (!G || !G.daily) return;
+  const q = G.daily.quests[idx];
+  if (!q || !q.done || G.daily.claimed.includes(q.id)) return;
+  G.gold += q.reward.gold || 0;
+  G.xp   += q.reward.xp   || 0;
+  (q.reward.items || []).forEach(id => addToBag(id));
+  G.daily.claimed.push(q.id);
+  checkAchievements && checkAchievements();
+  saveGame();
+  toast('✦ 領取每日任務獎勵：' + (q.reward.gold||0) + ' 金 ＋' + (q.reward.xp||0) + ' XP');
+}
+
+// ══════════ 簽到系統 ══════════
+function doCheckin() {
+  if (!G) return false;
+  if (!G.checkin) G.checkin = { lastDate:'', streak:0, totalDays:0, claimedMilestones:[] };
+  const today = todayStr();
+  if (G.checkin.lastDate === today) return false;  // 今天已簽到
+
+  const yesterday = (() => {
+    const d = new Date(); d.setDate(d.getDate()-1);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  })();
+
+  G.checkin.streak = G.checkin.lastDate === yesterday ? G.checkin.streak + 1 : 1;
+  G.checkin.totalDays++;
+  G.checkin.lastDate = today;
+
+  // 基礎獎勵：10金 + streak加成
+  const baseGold = 10 + G.checkin.streak * 5;
+  const baseXp   = 5  + G.checkin.streak * 2;
+  G.gold += baseGold;
+  G.xp   += baseXp;
+
+  // 里程碑獎勵
+  let milestoneMsg = '';
+  if (typeof CHECKIN_MILESTONES !== 'undefined') {
+    CHECKIN_MILESTONES.forEach(m => {
+      if (G.checkin.streak === m.days && !G.checkin.claimedMilestones.includes(m.days)) {
+        G.checkin.claimedMilestones.push(m.days);
+        G.gold += m.reward.gold || 0;
+        G.xp   += m.reward.xp   || 0;
+        (m.reward.items || []).forEach(id => addToBag(id));
+        milestoneMsg = '\n🎁 連簽里程碑：' + m.desc + '！';
+      }
+    });
+  }
+
+  checkLevelUp();
+  saveGame();
+  return { streak: G.checkin.streak, gold: baseGold, xp: baseXp, milestone: milestoneMsg };
 }
