@@ -632,3 +632,30 @@ const ACHIEVEMENTS = [
     desc:'（隱藏）在 Lv.3 以下通關任一地圖',
     cond: g => (g.achStats?.lowLevelClear||0) >= 1 },
 ];
+
+// ══════════ 每日任務系統 ══════════
+// type: 'kill' | 'kill_elite' | 'clear_map' | 'use_skill' | 'earn_gold' | 'use_item'
+const DAILY_QUEST_POOL = [
+  { id:'dq_kill5',     type:'kill',       need:5,  desc:'今日擊敗 5 隻敵人',         reward:{ gold:60,  xp:30  } },
+  { id:'dq_kill10',    type:'kill',       need:10, desc:'今日擊敗 10 隻敵人',        reward:{ gold:120, xp:60  } },
+  { id:'dq_kill15',    type:'kill',       need:15, desc:'今日擊敗 15 隻敵人',        reward:{ gold:200, xp:100 } },
+  { id:'dq_elite1',    type:'kill_elite', need:1,  desc:'今日擊敗 1 隻精英怪',       reward:{ gold:100, xp:50  } },
+  { id:'dq_elite3',    type:'kill_elite', need:3,  desc:'今日擊敗 3 隻精英怪',       reward:{ gold:250, xp:120 } },
+  { id:'dq_clear1',    type:'clear_map',  need:1,  desc:'今日完成 1 次地圖通關',     reward:{ gold:80,  xp:40  } },
+  { id:'dq_clear2',    type:'clear_map',  need:2,  desc:'今日完成 2 次地圖通關',     reward:{ gold:180, xp:90  } },
+  { id:'dq_skill5',    type:'use_skill',  need:5,  desc:'今日使用技能 5 次',         reward:{ gold:70,  xp:35  } },
+  { id:'dq_skill10',   type:'use_skill',  need:10, desc:'今日使用技能 10 次',        reward:{ gold:150, xp:75  } },
+  { id:'dq_gold100',   type:'earn_gold',  need:100,desc:'今日獲得 100 金幣（戰鬥）', reward:{ gold:50,  xp:25  } },
+  { id:'dq_gold300',   type:'earn_gold',  need:300,desc:'今日獲得 300 金幣（戰鬥）', reward:{ gold:120, xp:60  } },
+  { id:'dq_item1',     type:'use_item',   need:1,  desc:'今日使用 1 次物品',         reward:{ gold:60,  xp:30  } },
+  { id:'dq_npc1',      type:'talk_npc',   need:1,  desc:'今日與 NPC 對話 1 次',      reward:{ gold:50,  xp:25  } },
+  { id:'dq_survive',   type:'low_hp_win', need:1,  desc:'今日在低血量時擊敗敵人',    reward:{ gold:150, xp:80  } },
+];
+
+// 簽到里程碑（連續天數 → 特殊獎勵）
+const CHECKIN_MILESTONES = [
+  { days:3,  reward:{ gold:200, xp:100 }, desc:'連續簽到 3 天' },
+  { days:7,  reward:{ gold:500, xp:300, items:['hp_pot','mp_pot'] }, desc:'連續簽到 7 天' },
+  { days:14, reward:{ gold:1000, xp:600, items:['hp_pot','hp_pot','mp_pot'] }, desc:'連續簽到 14 天' },
+  { days:30, reward:{ gold:3000, xp:1500, items:['hp_pot','mp_pot','hp_pot','mp_pot'] }, desc:'連續簽到 30 天' },
+];
