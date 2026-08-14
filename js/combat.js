@@ -47,11 +47,14 @@ if (combat.floor > combat.maxFloor) { endAdventure(); return; }
 
 // 隨機事件（非Boss關）
 if (combat.floor < combat.maxFloor) {
-const r = Math.random();
-if (r < 0.10) { showMerchantEvent(); return; }
-if (r < 0.15) { showChestEvent();   return; }
-if (r < 0.20) { showTrapEvent();    return; }
-if (r < 0.30) { showRoadNpcEvent(); return; }
+  const r = Math.random();
+  // 事件機率隨地圖深入提高
+  const depthBonus = (combat.floor / combat.maxFloor) * 0.1;
+  if (r < 0.10) { showMerchantEvent(); return; }
+  if (r < 0.15) { showChestEvent();   return; }
+  if (r < 0.20) { showTrapEvent();    return; }
+  if (r < 0.27) { showRoadNpcEvent(); return; }
+  if (r < 0.27 + 0.25 + depthBonus) { showRandomEvent(); return; }
 }
 startBattle();
 }
@@ -537,6 +540,80 @@ combat.floor++;
 if (combat.floor > combat.maxFloor) endAdventure();
 else startBattle();
 }
+
+// ══════════ 新版隨機事件系統 ══════════
+function showRandomEvent() {
+  if (typeof RANDOM_EVENTS === 'undefined') { startBattle(); return; }
+
+  // 篩選：地圖符合 + 按 weight 加權抽取
+  const mapId = combat.mapId;
+  const pool = RANDOM_EVENTS.filter(e =>
+    !e.mapFilter || e.mapFilter.includes(mapId)
+  );
+  if (!pool.length) { startBattle(); return; }
+
+  // 加權抽取
+  const totalWeight = pool.reduce((s, e) => s + (e.weight || 1), 0);
+  let rand = Math.random() * totalWeight;
+  let event = pool[pool.length - 1];
+  for (const e of pool) {
+    rand -= (e.weight || 1);
+    if (rand <= 0) { event = e; break; }
+  }
+
+  document.getElementById('battle-area').style.display = 'none';
+
+  if (event.type === 'instant') {
+    const result = event.resolve(G);
+    renderStatus();
+    document.getElementById('event-area').innerHTML = `
+      <div class="event-box">
+        <div class="event-title">${event.title}</div>
+        <div class="event-desc">${result.desc}</div>
+        <div style="text-align:center;margin-top:14px;">
+          <button class="btn btn-sm" style="width:160px;" onclick="resumeBattle()">
+            <div class="btn-inner">繼續前進</div>
+          </button>
+        </div>
+      </div>`;
+  } else {
+    // choice 型事件
+    const choicesHtml = event.choices.map((c, i) =>
+      `<button class="btn btn-wide btn-sm" style="margin-bottom:6px;"
+         onclick="resolveEventChoice(${i})">
+         <div class="btn-inner">${c.label}</div>
+       </button>`
+    ).join('');
+    // 暫存事件到 combat
+    combat.currentEvent = event;
+    document.getElementById('event-area').innerHTML = `
+      <div class="event-box">
+        <div class="event-title">${event.title}</div>
+        <div class="event-desc">${event.desc}</div>
+        <div style="margin-top:14px;">${choicesHtml}</div>
+      </div>`;
+  }
+}
+
+function resolveEventChoice(idx) {
+  const event = combat.currentEvent;
+  if (!event || !event.choices[idx]) { resumeBattle(); return; }
+  const result = event.choices[idx].resolve(G);
+  combat.currentEvent = null;
+  renderStatus();
+  checkLevelUp();
+  document.getElementById('event-area').innerHTML = `
+    <div class="event-box">
+      <div class="event-title">${event.title}</div>
+      <div class="event-desc" style="color:#c8d8a0;">${result.desc}</div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="btn btn-sm" style="width:160px;" onclick="resumeBattle()">
+          <div class="btn-inner">繼續前進</div>
+        </button>
+      </div>
+    </div>`;
+}
+
 // ══════════ 路上 NPC 事件 ══════════
 function showRoadNpcEvent() {
   // 依據等級篩選可出現的 NPC
