@@ -804,6 +804,22 @@ function renderTavernNpcs() {
   });
 }
 
+
+// ══════════ Tab 切換（通用） ══════════
+function switchScreenTab(screen, tab) {
+  const screenEl = document.getElementById('screen-' + screen);
+  if (!screenEl) return;
+  // 更新 tab 按鈕 active 狀態
+  screenEl.querySelectorAll('.screen-tab').forEach(el => {
+    const onclick = el.getAttribute('onclick') || '';
+    el.classList.toggle('active', onclick.includes("'" + tab + "'"));
+  });
+  // 更新 pane 顯示
+  screenEl.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  const pane = document.getElementById(screen + '-pane-' + tab);
+  if (pane) pane.classList.add('active');
+}
+
 // ══════════ 商店頁籤切換 ══════════
 function switchShopTab(tab) {
   ['item','equip','bag'].forEach(t => {
