@@ -659,3 +659,471 @@ const CHECKIN_MILESTONES = [
   { days:14, reward:{ gold:1000, xp:600, items:['hp_pot','hp_pot','mp_pot'] }, desc:'連續簽到 14 天' },
   { days:30, reward:{ gold:3000, xp:1500, items:['hp_pot','mp_pot','hp_pot','mp_pot'] }, desc:'連續簽到 30 天' },
 ];
+
+// ══════════ 隨機事件定義 ══════════
+// mapFilter: null = 所有地圖, 或 ['village','plains',...] 指定地圖
+// type: 'instant'（立即結果）| 'choice'（玩家選擇）
+const RANDOM_EVENTS = [
+
+  // ── 通用事件 ──
+  {
+    id: 'healing_spring',
+    title: '💧 治療泉水',
+    mapFilter: null, weight: 8,
+    type: 'instant',
+    resolve(G) {
+      const heal = Math.floor(G.stats.maxHp * 0.3);
+      const mpHeal = Math.floor(G.stats.maxMp * 0.3);
+      G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + heal);
+      G.stats.mp = Math.min(G.stats.maxMp, G.stats.mp + mpHeal);
+      return { icon:'💧', desc:`清澈的泉水散發著療癒的光芒。你喝了幾口，恢復 ${heal} HP 和 ${mpHeal} MP。` };
+    }
+  },
+  {
+    id: 'wandering_merchant',
+    title: '🧳 行商',
+    mapFilter: null, weight: 6,
+    type: 'choice',
+    desc: '一個揹著大包裹的行商攔住你的去路。「喂，要不要看看我的特價貨？」',
+    choices: [
+      { label: '花 80 金買補給', cost: { gold: 80 },
+        resolve(G) {
+          if (G.gold < 80) return { desc: '金幣不足，行商聳聳肩走了。' };
+          G.gold -= 80;
+          const items = ['hp_pot','hp_pot','mp_pot','atk_buf'];
+          const id = items[Math.floor(Math.random() * items.length)];
+          addToBag(id);
+          return { desc: `行商掏出一瓶 ${ITEMS_DEF[id].name} 遞給你。「划算吧！」` };
+        }
+      },
+      { label: '搶奪他的貨物', cost: null,
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.4) {
+            const id = ['hp_pot','mp_pot'][Math.floor(Math.random()*2)];
+            addToBag(id);
+            return { desc: '你動作迅速，搶了一瓶補給就跑。行商在後面破口大罵。' };
+          } else {
+            const dmg = Math.floor(G.stats.maxHp * 0.1);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            return { desc: `行商出乎意料地身手矯健，你被揍了一拳，損失 ${dmg} HP。哇！` };
+          }
+        }
+      },
+      { label: '無視繼續前進', cost: null,
+        resolve(G) { return { desc: '你禮貌地搖搖手，行商聳聳肩，讓開了路。' }; }
+      },
+    ]
+  },
+  {
+    id: 'ancient_altar',
+    title: '🗿 古老祭壇',
+    mapFilter: null, weight: 5,
+    type: 'choice',
+    desc: '路邊有一座古老的石製祭壇，上面刻著看不懂的符文，散發著微弱的光芒。',
+    choices: [
+      { label: '獻上 50 金，祈求祝福',
+        resolve(G) {
+          if (G.gold < 50) return { desc: '你口袋空空，神靈似乎有些不悅地熄滅了光芒。' };
+          G.gold -= 50;
+          const r = Math.random();
+          if (r < 0.5) {
+            G.stats.atk += 2; G.stats.matk += 2;
+            return { desc: '祭壇發出金光！神靈賜予你力量，ATK 和 MATK 永久 +2。' };
+          } else if (r < 0.8) {
+            const heal = Math.floor(G.stats.maxHp * 0.5);
+            G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + heal);
+            return { desc: `祭壇發出柔光，你感到一陣溫暖，回復 ${heal} HP。` };
+          } else {
+            return { desc: '祭壇沉默了，神靈沒有回應。金幣消失在光芒中。' };
+          }
+        }
+      },
+      { label: '用鮮血獻祭（損失 20% HP）',
+        resolve(G) {
+          const cost = Math.floor(G.stats.maxHp * 0.2);
+          G.stats.hp = Math.max(1, G.stats.hp - cost);
+          const buff = Math.floor(Math.random() * 3);
+          const buffs = [
+            () => { G.stats.def += 3; G.stats.mdef += 3; return 'DEF 和 MDEF 永久 +3。'; },
+            () => { G.statPoints = (G.statPoints||0) + 1; return '獲得 1 個屬性點。'; },
+            () => { G.skillPoints = (G.skillPoints||0) + 1; return '獲得 1 個技能點。'; },
+          ];
+          const result = buffs[buff]();
+          return { desc: `祭壇貪婪地飲下你的鮮血，給予回報——${result}` };
+        }
+      },
+      { label: '離開，不理會', resolve(G) { return { desc: '謹慎是種美德，你繞開了祭壇繼續前行。' }; } },
+    ]
+  },
+  {
+    id: 'mysterious_book',
+    title: '📜 古舊卷軸',
+    mapFilter: null, weight: 4,
+    type: 'choice',
+    desc: '地上有一卷散落的羊皮紙，上面寫著密密麻麻的文字，其中一段清晰可辨。',
+    choices: [
+      { label: '仔細研讀',
+        resolve(G) {
+          G.xp += 40;
+          checkLevelUp();
+          return { desc: '你花了一些時間研讀，從中領悟到一些道理，獲得 40 XP。' };
+        }
+      },
+      { label: '撕下帶走',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.5) {
+            addToBag('hp_pot');
+            return { desc: '卷軸的一角寫著一個秘方，你把它記下來並找到了材料，獲得一瓶HP藥水。' };
+          } else {
+            const dmg = Math.floor(G.stats.maxHp * 0.08);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            return { desc: `卷軸上有詛咒！你的手指有些灼傷，損失 ${dmg} HP。` };
+          }
+        }
+      },
+      { label: '燒掉它', resolve(G) { return { desc: '有些知識不該存在。你點火燒掉了卷軸，它在火焰中發出奇怪的綠色光芒。' }; } },
+    ]
+  },
+
+  // ── 荒野/草原 事件 ──
+  {
+    id: 'wild_beast_lair',
+    title: '🐾 野獸巢穴',
+    mapFilter: ['plains','snowmnt'], weight: 7,
+    type: 'choice',
+    desc: '你發現一個廢棄的野獸巢穴，裡面散落著一些東西。',
+    choices: [
+      { label: '搜刮巢穴',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.6) {
+            const gold = 15 + Math.floor(Math.random() * 25);
+            G.gold += gold;
+            return { desc: `你在巢穴角落找到了 ${gold} 金幣——不知道野獸從哪裡搶來的。` };
+          } else {
+            const dmg = Math.floor(G.stats.maxHp * 0.15);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            return { desc: `巢穴主人回來了！你倉皇逃跑，被抓傷，損失 ${dmg} HP。` };
+          }
+        }
+      },
+      { label: '放置食物引誘野獸（用一個背包物品）',
+        resolve(G) {
+          const consumables = G.bag.map((e,i)=>({e,i})).filter(({e})=>typeof e==='string');
+          if (!consumables.length) return { desc: '你沒有可以用的物品。' };
+          const {i} = consumables[0];
+          G.bag.splice(i,1);
+          G.xp += 25;
+          return { desc: '你用物品引走了野獸，趁機搜刮了巢穴，獲得 25 XP。' };
+        }
+      },
+      { label: '繞道而行', resolve(G) { return { desc: '不值得冒這個險，你繞開了巢穴。' }; } },
+    ]
+  },
+  {
+    id: 'storm',
+    title: '⛈️ 暴風來襲',
+    mapFilter: ['plains','snowmnt'], weight: 5,
+    type: 'choice',
+    desc: '天色突然黑暗，一場暴風說來就來。閃電劈在附近的樹上，雨水拍打著你的盔甲。',
+    choices: [
+      { label: '尋找掩護躲避',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.5) {
+            const heal = Math.floor(G.stats.maxHp * 0.15);
+            G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + heal);
+            return { desc: `你找到一個岩石洞穴，在裡面休息了一會兒，HP 回復 ${heal}。` };
+          } else {
+            return { desc: '你找到遮蔽，暴風吹了一段時間後平息。有驚無險。' };
+          }
+        }
+      },
+      { label: '硬撐著繼續前進',
+        resolve(G) {
+          const dmg = Math.floor(G.stats.maxHp * 0.1);
+          G.stats.hp = Math.max(1, G.stats.hp - dmg);
+          G.xp += 20;
+          return { desc: `你在暴風中硬是前行，雖然損失了 ${dmg} HP，但意志得到磨練，獲得 20 XP。` };
+        }
+      },
+    ]
+  },
+
+  // ── 洞穴/廢墟 事件 ──
+  {
+    id: 'ancient_ruins',
+    title: '🏚️ 遺跡碑文',
+    mapFilter: ['ruins','cave','temple'], weight: 7,
+    type: 'choice',
+    desc: '牆上刻著古老的碑文，雖然文字陌生，但你能感受到其中蘊含的力量。',
+    choices: [
+      { label: '觸摸碑文，感受力量',
+        resolve(G) {
+          const r = Math.random();
+          const outcomes = [
+            () => { G.stats.maxHp += 10; G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + 10); return 'MaxHP 永久 +10。'; },
+            () => { G.stats.atk  += 2; return 'ATK 永久 +2。'; },
+            () => { G.stats.matk += 2; return 'MATK 永久 +2。'; },
+            () => { G.stats.def  += 2; return 'DEF 永久 +2。'; },
+            () => { const d = Math.floor(G.stats.maxHp*0.12); G.stats.hp=Math.max(1,G.stats.hp-d); return `詛咒反噬！損失 ${d} HP。`; },
+          ];
+          const result = outcomes[Math.floor(Math.random()*outcomes.length)]();
+          return { desc: `碑文發出微光，你感到一股力量流入體內——${result}` };
+        }
+      },
+      { label: '抄錄碑文研究',
+        resolve(G) { G.xp += 50; checkLevelUp(); return { desc: '你花時間仔細抄錄，雖然費時，但獲得了知識，+50 XP。' }; }
+      },
+      { label: '不理會繼續探索', resolve(G) { return { desc: '謹慎是美德，你繼續前行。' }; } },
+    ]
+  },
+  {
+    id: 'trapped_adventurer',
+    title: '🧗 受困冒險者',
+    mapFilter: ['cave','ruins'], weight: 6,
+    type: 'choice',
+    desc: '你聽到微弱的求救聲，循聲找到一個被落石困住的冒險者，他傷得不輕。',
+    choices: [
+      { label: '花力氣幫他脫困（損失 10% HP）',
+        resolve(G) {
+          const cost = Math.floor(G.stats.maxHp * 0.1);
+          G.stats.hp = Math.max(1, G.stats.hp - cost);
+          const r = Math.random();
+          if (r < 0.7) {
+            const gold = 30 + Math.floor(Math.random() * 50);
+            G.gold += gold;
+            return { desc: `冒險者千恩萬謝，把身上僅剩的 ${gold} 金幣塞給你。「這是我全部的謝禮。」` };
+          } else {
+            addToBag('hp_pot');
+            return { desc: '冒險者從背包裡翻出一瓶藥水遞給你。「拿著，這是我最後的存糧。」' };
+          }
+        }
+      },
+      { label: '給他一個藥水然後離開',
+        resolve(G) {
+          const idx = G.bag.indexOf('hp_pot');
+          if (idx === -1) return { desc: '你沒有藥水，對他抱歉地搖搖頭，他苦笑著接受了。' };
+          G.bag.splice(idx, 1);
+          G.xp += 30;
+          return { desc: '你給了他一瓶藥水，繼續前行，獲得 30 XP。對了，做好事總是有好報的。' };
+        }
+      },
+      { label: '無視他繼續前行',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.3) {
+            const dmg = Math.floor(G.stats.maxHp * 0.08);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            return { desc: `良心不安讓你分了神，沒注意腳下而絆倒，損失 ${dmg} HP。` };
+          }
+          return { desc: '你硬下心腸，繼續前行。有些事情，你寧願忘記。' };
+        }
+      },
+    ]
+  },
+  {
+    id: 'goblin_gamble',
+    title: '🎲 地精賭局',
+    mapFilter: ['ruins','cave'], weight: 4,
+    type: 'choice',
+    desc: '一隻地精蹲在角落，面前擺著三個骰子。「來，來玩一局，賭注輕，彩頭大！」',
+    choices: [
+      { label: '賭 30 金（猜大或小）',
+        resolve(G) {
+          if (G.gold < 30) return { desc: '「沒錢別湊熱鬧。」地精把你轟走了。' };
+          G.gold -= 30;
+          const roll = Math.floor(Math.random() * 6) + 1;
+          const win  = roll >= 4;
+          if (win) { G.gold += 80; return { desc: `骰子落定：${roll}！你贏了！地精嘟嘟囔囔地付給你 80 金。` }; }
+          return { desc: `骰子落定：${roll}。地精咧嘴一笑，把你的金幣收走。` };
+        }
+      },
+      { label: '作弊！（需要 SPD 足夠高）',
+        resolve(G) {
+          const canCheat = G.stats.spd >= 10;
+          if (canCheat) {
+            const gold = 40 + Math.floor(Math.random() * 40);
+            G.gold += gold;
+            return { desc: `你的手速夠快，神不知鬼不覺地換了骰子，贏走了 ${gold} 金。地精抓頭百思不解。` };
+          } else {
+            const dmg = Math.floor(G.stats.maxHp * 0.12);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            return { desc: `手速不夠快，被地精抓包了！你被揍了一頓，損失 ${dmg} HP。` };
+          }
+        }
+      },
+      { label: '拒絕，繼續前進', resolve(G) { return { desc: '你搖搖頭，地精聳聳肩繼續蹲著。' }; } },
+    ]
+  },
+
+  // ── 沼澤/毒性 事件 ──
+  {
+    id: 'toxic_fog',
+    title: '☠️ 毒霧地帶',
+    mapFilter: ['swamp'], weight: 10,
+    type: 'choice',
+    desc: '濃重的黃色毒霧瀰漫在前方，幾乎遮住了視線，隱約能聞到刺鼻的氣味。',
+    choices: [
+      { label: '屏住呼吸硬闖',
+        resolve(G) {
+          if (G.stats.def >= 12) {
+            return { desc: '你的防禦足夠高，毒霧沒有對你造成明顯影響。' };
+          }
+          const dmg = Math.floor(G.stats.maxHp * 0.18);
+          G.stats.hp = Math.max(1, G.stats.hp - dmg);
+          combat.playerPoisoned = true;
+          return { desc: `毒霧侵入你的肺部，損失 ${dmg} HP 並中毒！` };
+        }
+      },
+      { label: '使用解毒劑再前進',
+        resolve(G) {
+          const idx = G.bag.indexOf('antidote');
+          if (idx === -1) return { desc: '你沒有解毒劑，只能嘗試硬闖。毒霧讓你的眼睛刺痛。' };
+          G.bag.splice(idx, 1);
+          return { desc: '你喝下解毒劑再前行，毒霧雖濃，但對你沒有造成傷害。' };
+        }
+      },
+      { label: '繞遠路避開（損失機會）',
+        resolve(G) {
+          G.xp = Math.max(0, G.xp - 10);
+          return { desc: '你繞了很遠的路，多花了不少時間，但安全通過。-10 XP。' };
+        }
+      },
+    ]
+  },
+  {
+    id: 'corruption_pool',
+    title: '🌑 詛咒深潭',
+    mapFilter: ['swamp','temple'], weight: 5,
+    type: 'choice',
+    desc: '一個散發著黑色光芒的深潭橫在路中央，水面平靜得詭異，能看到水底的金幣。',
+    choices: [
+      { label: '伸手撈取金幣',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.4) {
+            const gold = 50 + Math.floor(Math.random() * 50);
+            G.gold += gold;
+            return { desc: `你成功撈出了 ${gold} 金幣，什麼壞事都沒發生……但你的手指有一點點麻。` };
+          } else {
+            const dmg = Math.floor(G.stats.maxHp * 0.2);
+            G.stats.hp = Math.max(1, G.stats.hp - dmg);
+            combat.playerPoisoned = true;
+            return { desc: `詛咒！黑水沿著你的手蔓延，損失 ${dmg} HP 並中毒！金幣也消失了。` };
+          }
+        }
+      },
+      { label: '向深潭祈禱',
+        resolve(G) {
+          const r = Math.random();
+          if (r < 0.3) {
+            G.stats.mdef += 3;
+            return { desc: '深潭似乎回應了你的祈禱，黑光凝成符文烙在你的手背上，MDEF 永久 +3。' };
+          }
+          return { desc: '深潭沉默不語，你的祈禱消散在空氣中。' };
+        }
+      },
+      { label: '繞開，絕對不碰那個東西', resolve(G) { return { desc: '明智的決定。你繞開了那個詭異的深潭。' }; } },
+    ]
+  },
+
+  // ── 火山/冰山 事件 ──
+  {
+    id: 'lava_vent',
+    title: '🌋 熔岩噴口',
+    mapFilter: ['volcano'], weight: 8,
+    type: 'choice',
+    desc: '地面裂縫中噴出高溫蒸汽，一個熔岩噴口就在你腳邊，能感受到難以忍受的熱浪。',
+    choices: [
+      { label: '跳過去（需要 SPD ≥ 8）',
+        resolve(G) {
+          if (G.stats.spd >= 8) {
+            return { desc: '你快速起跳，飛越了裂縫，裙邊燒焦了一點但人沒事。' };
+          }
+          const dmg = Math.floor(G.stats.maxHp * 0.15);
+          G.stats.hp = Math.max(1, G.stats.hp - dmg);
+          return { desc: `速度不夠！你勉強跳過但被熔岩灼傷，損失 ${dmg} HP。` };
+        }
+      },
+      { label: '用盾牌擋住熱浪硬衝（需要 DEF ≥ 10）',
+        resolve(G) {
+          if (G.stats.def >= 10) {
+            const bonus = 20 + Math.floor(Math.random() * 20);
+            G.gold += bonus;
+            return { desc: `你用盾牌護住自己衝過去，還在裂縫邊找到了一塊熔岩結晶，換得 ${bonus} 金。` };
+          }
+          const dmg = Math.floor(G.stats.maxHp * 0.2);
+          G.stats.hp = Math.max(1, G.stats.hp - dmg);
+          return { desc: `防禦不夠！你被熱浪燒傷，損失 ${dmg} HP。` };
+        }
+      },
+      { label: '繞遠路慢慢過', resolve(G) { return { desc: '小心翼翼繞過熔岩噴口，沒有受傷。慢但安全。' }; } },
+    ]
+  },
+  {
+    id: 'blizzard',
+    title: '❄️ 暴雪困境',
+    mapFilter: ['snowmnt'], weight: 8,
+    type: 'choice',
+    desc: '一場突如其來的暴雪幾乎遮蔽了視線，氣溫急劇下降，你的四肢開始僵硬。',
+    choices: [
+      { label: '生火取暖（消耗物品）',
+        resolve(G) {
+          const idx = G.bag.findIndex(e => typeof e === 'string');
+          if (idx === -1) return { desc: '你沒有任何可以燃燒的東西，只能硬撐著等暴雪過去。' };
+          G.bag.splice(idx, 1);
+          const heal = Math.floor(G.stats.maxHp * 0.2);
+          G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + heal);
+          return { desc: `你用物品引火取暖，在火堆旁休息了一會兒，回復 ${heal} HP。` };
+        }
+      },
+      { label: '硬撐前行',
+        resolve(G) {
+          const dmg = Math.floor(G.stats.maxHp * 0.15);
+          G.stats.hp = Math.max(1, G.stats.hp - dmg);
+          combat.playerFrozen = true;
+          return { desc: `嚴寒侵入骨髓，損失 ${dmg} HP 並被凍結！下回合骰子固定為 DEF。` };
+        }
+      },
+      { label: '找地方躲避等待暴雪過去',
+        resolve(G) {
+          G.stats.mp = Math.min(G.stats.maxMp, G.stats.mp + Math.floor(G.stats.maxMp * 0.4));
+          return { desc: '你找到一個背風的岩壁躲避，利用等待的時間冥想恢復，MP 回復 40%。' };
+        }
+      },
+    ]
+  },
+
+  // ── 神殿 事件 ──
+  {
+    id: 'divine_trial',
+    title: '⚡ 神靈試煉',
+    mapFilter: ['temple'], weight: 8,
+    type: 'choice',
+    desc: '一道金光從頭頂照下，空氣中傳來莊嚴的聲音：「旅人，你選擇什麼？」',
+    choices: [
+      { label: '「我選擇力量」',
+        resolve(G) {
+          G.stats.atk += 3; G.stats.def += 3;
+          return { desc: '金光凝聚在你的手臂上，ATK 和 DEF 永久各 +3。' };
+        }
+      },
+      { label: '「我選擇智慧」',
+        resolve(G) {
+          G.stats.matk += 3; G.stats.mdef += 3;
+          return { desc: '金光凝聚在你的眉心，MATK 和 MDEF 永久各 +3。' };
+        }
+      },
+      { label: '「我選擇生命」',
+        resolve(G) {
+          G.stats.maxHp += 30; G.stats.hp = Math.min(G.stats.maxHp, G.stats.hp + 30);
+          G.stats.maxMp += 15; G.stats.mp = Math.min(G.stats.maxMp, G.stats.mp + 15);
+          return { desc: '金光溫柔地包裹住你，MaxHP +30、MaxMP +15。' };
+        }
+      },
+    ]
+  },
+];
