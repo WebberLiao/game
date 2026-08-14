@@ -37,7 +37,7 @@ poisonBackup, log: [],
 document.getElementById('combat-map-title').textContent = map.name;
 document.getElementById('event-area').innerHTML = '';
 document.getElementById('battle-area').style.display = '';
-nextFloor();
+startBattle();
 showScreen('screen-combat');
 }
 
@@ -404,7 +404,6 @@ addLog(`🏆 擊敗 ${e.name}！獲得 ${e.gold} 金幣`, 'heal');
 G.gold += e.gold; G.xp += e.xp;
 if (typeof updateDailyProgress === 'function' && e.gold > 0) updateDailyProgress('earn_gold', e.gold);
 if (G.gold <= 0 && typeof addAchStat === 'function') addAchStat('brokeRun', 1);
-if (G.gold <= 0) addAchStat('brokeRun', 1);
 G.quests.forEach(q => {
 const def = QUESTS_DEF.find(d => d.id === q.id);
 if (def && e.type === def.target && q.progress < def.need) q.progress++;
@@ -533,12 +532,12 @@ document.getElementById('event-area').innerHTML = ` <div class="event-box"> <div
 }
 
 function resumeBattle() {
-closeOverlay('merchant-overlay');
-document.getElementById('event-area').innerHTML = '';
-document.getElementById('battle-area').style.display = '';
-combat.floor++;
-if (combat.floor > combat.maxFloor) endAdventure();
-else startBattle();
+  closeOverlay('merchant-overlay');
+  document.getElementById('event-area').innerHTML = '';
+  document.getElementById('battle-area').style.display = '';
+  // floor 在 enemyDied 已加過，resumeBattle 只負責開始下一戰
+  if (combat.floor > combat.maxFloor) endAdventure();
+  else startBattle();
 }
 
 // ══════════ 新版隨機事件系統 ══════════
@@ -641,4 +640,19 @@ function showRoadNpcEvent() {
 
 function openRoadNpc(npcId) {
   openNpcDialogue(npcId, NPCS.road);
+  // 對話結束後改 event-area 為只剩「繼續前進」（覆蓋掉「搭話」按鈕）
+  setTimeout(() => {
+    const ea = document.getElementById('event-area');
+    if (!ea) return;
+    ea.innerHTML = `
+      <div class="event-box">
+        <div class="event-title" id="road-npc-done-title"></div>
+        <div class="event-desc" style="color:#8a7a5a;">（對話已結束）</div>
+        <div style="text-align:center;margin-top:14px;">
+          <button class="btn btn-sm" style="width:160px;" onclick="resumeBattle()">
+            <div class="btn-inner">繼續前進</div>
+          </button>
+        </div>
+      </div>`;
+  }, 100);
 }
